@@ -1,0 +1,56 @@
+# ── Environment ──
+.env
+
+# ── Node ──
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Docker (optional local) ──
+*.log
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+.terraform/
+node_modules/
+.env
+
+# Node.js (Frontend)
+node_modules/
+dist/
+build/
+
+# Docker
+.env
+
+**/.terraform/*
+**/*.tfstate
+**/*.tfstate.backup
+**/*.tfvars
+**/node_modules/*
+.terraform/
+*.tfstate
+*.tfstate.backup
+node_modules/
+.env

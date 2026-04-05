@@ -1,0 +1,78 @@
+services:
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+
+  mongodb:
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_ROOT_PASSWORD}"
+    ports:
+      - "27018:27017"
+
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - "6379:6379"    
+
+  cart-services:
+    build: ./services/cart-service
+    restart: always
+    environment:
+      - PORT=3003
+    depends_on:
+      - db
+      - redis 
+
+  catalog-services:
+    build: ./services/catalog-service
+    restart: always
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - PORT=3002
+    depends_on:
+      - mongodb
+
+  order-services:
+    build: ./services/order-service
+    restart: always
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - PORT=3004
+    depends_on:
+      - mongodb
+
+  payment-service:
+    build: ./services/payment-service
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - PORT=3005
+    depends_on:
+      - db
+
+  user-service:        
+    build: ./services/user-service
+    restart: always
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=3001
+    depends_on:
+      - mongodb
+
+  nginx:
+    image: 3mrlmlops/webapp-frontend:latest
+    restart: always
+    ports:
+      - "80:80"
