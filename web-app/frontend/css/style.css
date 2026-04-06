@@ -102,7 +102,7 @@ a:hover { text-decoration: underline; }
   color: var(--primary);
   border: 1.5px solid var(--primary);
 }
-.btn-outline:hover { background: var(--primary); color: #fff; }
+.btn-outline:hover { background: var(--primary); color: #ff0000; }
 
 .btn-danger {
   background: var(--accent);
