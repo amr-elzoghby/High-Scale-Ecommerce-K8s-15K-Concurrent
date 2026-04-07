@@ -6,7 +6,7 @@ on:
     paths:
       - 'web-app/frontend/**'
   pull_request:
-    branches: [ "main", "feature/*"] 
+    branches: [ "main", "feature/*" ]
     paths:
       - 'web-app/frontend/**'
 
@@ -18,7 +18,6 @@ jobs:
       contents: read
 
     steps:
-    
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -41,12 +40,6 @@ jobs:
           role-to-assume: arn:aws:iam::644981759771:role/GitHubActionRole
           aws-region: us-east-1
 
-      - name: Deploy to EC2 via SSM
-        run: |
-          aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=tag:Name,Values=web-server" \
-            --parameters 'commands=["cd /home/ubuntu/ecommerce-microservices", "sudo docker-compose pull nginx", "sudo docker-compose up -d nginx"]'
       - name: Update GitOps Repository
         run: |
           git config --global user.name "github-actions[bot]"
@@ -54,51 +47,9 @@ jobs:
           
           git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/3MR-MLops/web-app-gitops.git gitops-repo
           
-
-  
-    - name: Checkout Code
-      uses: actions/checkout@v6
-
-    - name: Login to Docker Hub
-      uses: docker/login-action@v4
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_TOKEN }}
-
-    - name: Build and Push Docker Image
-      uses: docker/build-push-action@v4
-      with:
-        context: ./web-app/ecommerce-microservices/frontend
-        push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/webapp-frontend:latest
-
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-           role-to-assume: arn:aws:iam::644981759771:oidc-provider/token.actions.githubusercontent.com 
-           aws-region: us-east-1
-
-    - name: Deploy to EC2 via SSM
-      run: |
-        aws ssm send-command \
-          --document-name "AWS-RunShellScript" \
-          --targets "Key=tag:Name,Values=web-server" \
-          --parameters 'commands=["cd /home/ubuntu/ecommerce-microservices", "sudo docker-compose pull nginx", "sudo docker-compose up -d nginx"]'
-    - name: Update GitOps Repository
-      run: |
-          git config --global user.name "github-actions[bot]"
-
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/3MR-MLops/web-app-gitops.git gitops-repo
-
           cd gitops-repo
-
           sed -i "s/tag: .*/tag: v${{ github.run_number }}/" deployment.yaml
-
+          
           git add deployment.yaml
-
-
-          git commit -m "Update image tag to v${{ github.run_number }} [skip ci]"        
-                 
+          git commit -m "Update image tag to v${{ github.run_number }} [skip ci]"
           git push
