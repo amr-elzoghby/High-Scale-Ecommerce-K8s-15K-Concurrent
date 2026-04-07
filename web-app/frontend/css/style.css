@@ -234,8 +234,8 @@ input::placeholder { color: var(--text-muted); }
   position: absolute;
   top: 10px;
   left: 10px;
-  background: #005eff;
-  color: #fff;
+  background: #ffffff;
+  color: #cb1212;
   font-size: 0.7rem;
   font-weight: 700;
   padding: 3px 9px;
