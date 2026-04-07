@@ -48,3 +48,19 @@ jobs:
           --document-name "AWS-RunShellScript" \
           --targets "Key=tag:Name,Values=web-server" \
           --parameters 'commands=["cd /home/ubuntu/ecommerce-microservices", "sudo docker-compose pull nginx", "sudo docker-compose up -d nginx"]'
+    - name: Update GitOps Repository
+      run: |
+          git config --global user.name "github-actions[bot]"
+
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/3MR-MLops/web-app-gitops.git gitops-repo
+          cd gitops-repo
+
+          sed -i "s/tag: .*/tag: v${{ github.run_number }}/" deployment.yaml
+
+          git add deployment.yaml
+          
+          git commit -m "Update image tag to v${{ github.run_number }} [skip ci]"
+
+          git push
