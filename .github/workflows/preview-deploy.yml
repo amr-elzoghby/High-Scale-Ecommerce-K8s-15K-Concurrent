@@ -23,23 +23,23 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Build and Push Docker Image
-        run: |
-          echo "Building image for ${{ env.IMAGE_TAG }}..."
-          docker build -t 3mrlmlops/webapp-frontend:${{ env.IMAGE_TAG }} ./web-app/frontend
-          docker push 3mrlmlops/webapp-frontend:${{ env.IMAGE_TAG }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ./web-app/frontend
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/webapp-frontend:${{ env.IMAGE_TAG }}
           
       - name: Checkout GitOps Repo
         uses: actions/checkout@v4
         with:
           repository: 3MR-MLops/web-app-gitops
           token: ${{ secrets.GITOPS_TOKEN }}
-          path: gitops-folder 
-
+          path: gitops-folder
       - name: Create Temporary Manifest
         run: |
           cd gitops-folder
           cp deployment.yaml deployment-${{ env.IMAGE_TAG }}.yaml
-          sed -i "s|image: .*|image: 3mrlmlops/webapp-frontend:${{ env.IMAGE_TAG }}|g" deployment-${{ env.IMAGE_TAG }}.yaml
+          sed -i "s|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/webapp-frontend:${{ env.IMAGE_TAG }}|g" deployment-${{ env.IMAGE_TAG }}.yaml
 
       - name: Push new file to GitOps Repo
         run: |
