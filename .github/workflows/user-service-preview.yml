@@ -47,13 +47,19 @@ jobs:
         run: |
           cd gitops-folder
           cp deployment.yaml deployment-user-service-${{ env.IMAGE_TAG }}.yaml
-          sed -i '/image: webapp-user-service/{n;s/tag: .*/tag: "${{ env.IMAGE_TAG }}"/}' deployment-user-service-${{ env.IMAGE_TAG }}.yaml
+          # Update tag while preserving indentation
+          sed -i '/image: webapp-user-service/{n;s/\(tag: \).*/\1"${{ env.IMAGE_TAG }}"/}' deployment-user-service-${{ env.IMAGE_TAG }}.yaml
 
       - name: Push to GitOps Repo
         run: |
           cd gitops-folder
           git config user.name "GitHub Actions Bot"
           git config user.email "bot@github.com"
-          git add deployment-user-service-${{ env.IMAGE_TAG }}.yaml
-          git commit -m "Deploy user-service preview for ${{ env.IMAGE_TAG }}"
-          git push
+          
+          if [ -n "$(git status --porcelain)" ]; then
+            git add deployment-user-service-${{ env.IMAGE_TAG }}.yaml
+            git commit -m "Deploy user-service preview for ${{ env.IMAGE_TAG }}"
+            git push
+          else
+            echo "No changes to commit"
+          fi

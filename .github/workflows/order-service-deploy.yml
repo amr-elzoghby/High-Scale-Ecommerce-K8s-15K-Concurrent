@@ -52,8 +52,13 @@ jobs:
           git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/3MR-MLops/web-app-gitops.git gitops-repo
 
           cd gitops-repo
-          sed -i '/image: webapp-order-service/{n;s/tag: .*/tag: "v${{ github.run_number }}"/}' deployment.yaml
+          # Update tag while preserving indentation
+          sed -i '/image: webapp-order-service/{n;s/\(tag: \).*/\1"v${{ github.run_number }}"/}' deployment.yaml
 
-          git add deployment.yaml
-          git commit -m "Update order-service image tag to v${{ github.run_number }} [skip ci]"
-          git push
+          if [ -n "$(git status --porcelain)" ]; then
+            git add deployment.yaml
+            git commit -m "Update order-service image tag to v${{ github.run_number }} [skip ci]"
+            git push
+          else
+            echo "No changes detected in deployment.yaml"
+          fi
