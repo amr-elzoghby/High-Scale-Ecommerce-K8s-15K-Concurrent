@@ -22,7 +22,7 @@ module "compute" {
   key_name         = var.key_name
   db_password      = var.db_password
   
-  asg_desired_capacity = 2 # Higher availability for prod
+  asg_desired_capacity = 2 
   asg_min_size         = 2
   asg_max_size         = 4
 

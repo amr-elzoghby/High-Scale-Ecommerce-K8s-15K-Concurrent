@@ -21,7 +21,10 @@ resource "aws_launch_template" "app" {
   user_data = base64encode(templatefile("${path.module}/userdata.sh", {
     s3_bucket   = local.s3_bucket_name
     db_password = var.db_password
+    alb_dns     = aws_lb.main.dns_name
   }))
+
+
 
 
   network_interfaces {

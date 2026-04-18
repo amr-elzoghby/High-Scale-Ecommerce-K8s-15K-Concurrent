@@ -1,9 +1,10 @@
 # ─── Archive Lambda Code ──────────────────────────────────────────────────────
 data "archive_file" "payment_lambda" {
   type        = "zip"
-  source_file = "${path.module}/../ecommerce-microservices/services/payment-service/lambda_handler.py"
+  source_file = "${path.module}/../../ecommerce-microservices/services/payment-service/lambda_handler.py"
   output_path = "${path.module}/payment_lambda.zip"
 }
+
 
 # ─── Lambda IAM Role ─────────────────────────────────────────────────────────
 resource "aws_iam_role" "payment_lambda_role" {

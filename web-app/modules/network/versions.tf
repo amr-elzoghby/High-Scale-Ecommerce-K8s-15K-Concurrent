@@ -7,14 +7,7 @@ terraform {
       version = "~> 5.0"
     }
   }
-
-  backend "s3" {
-    bucket         = "tf-state-ecommerce-microservices-3mr"
-    key            = "network/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "tf-state-locks"
-    encrypt        = true
-  }
 }
+
 
 

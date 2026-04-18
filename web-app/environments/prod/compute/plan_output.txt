@@ -1,0 +1,364 @@
+Acquiring state lock. This may take a few moments...
+module.compute.data.terraform_remote_state.storage: Reading...
+module.compute.data.terraform_remote_state.network: Reading...
+module.compute.data.archive_file.payment_lambda: Reading...
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform planned the following actions, but then encountered a problem:
+
+  # module.compute.aws_apigatewayv2_api.payment_api will be created
+  + resource "aws_apigatewayv2_api" "payment_api" {
+      + api_endpoint                 = (known after apply)
+      + api_key_selection_expression = "$request.header.x-api-key"
+      + arn                          = (known after apply)
+      + execution_arn                = (known after apply)
+      + id                           = (known after apply)
+      + ip_address_type              = (known after apply)
+      + name                         = "shop-prod-payment-api"
+      + protocol_type                = "HTTP"
+      + route_selection_expression   = "$request.method $request.path"
+      + tags_all                     = {
+          + "Environment" = "prod"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "3mr-devops"
+          + "Project"     = "ecommerce-microservices"
+        }
+    }
+
+  # module.compute.aws_apigatewayv2_stage.default will be created
+  + resource "aws_apigatewayv2_stage" "default" {
+      + api_id        = (known after apply)
+      + arn           = (known after apply)
+      + auto_deploy   = true
+      + deployment_id = (known after apply)
+      + execution_arn = (known after apply)
+      + id            = (known after apply)
+      + invoke_url    = (known after apply)
+      + name          = "$default"
+      + tags_all      = {
+          + "Environment" = "prod"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "3mr-devops"
+          + "Project"     = "ecommerce-microservices"
+        }
+    }
+
+  # module.compute.aws_ecr_repository.services["cart-service"] will be created
+  + resource "aws_ecr_repository" "services" {
+      + arn                  = (known after apply)
+      + force_delete         = true
+      + id                   = (known after apply)
+      + image_tag_mutability = "MUTABLE"
+      + name                 = "prod-cart-service"
+      + registry_id          = (known after apply)
+      + repository_url       = (known after apply)
+      + tags                 = {
+          + "Environment" = "prod"
+          + "Name"        = "prod-cart-service-repo"
+        }
+      + tags_all             = {
+          + "Environment" = "prod"
+          + "ManagedBy"   = "Terraform"
+          + "Name"        = "prod-cart-service-repo"
+          + "Owner"       = "3mr-devops"
+          + "Project"     = "ecommerce-microservices"
+        }
+
+      + image_scanning_configuration {
+          + scan_on_push = true
+        }
+    }
+
+  # module.compute.aws_ecr_repository.services["catalog-service"] will be created
+  + resource "aws_ecr_repository" "services" {
+      + arn                  = (known after apply)
+      + force_delete         = true
+      + id                   = (known after apply)
+      + image_tag_mutability = "MUTABLE"
+      + name                 = "prod-catalog-service"
+      + registry_id          = (known after apply)
+      + repository_url       = (known after apply)
+      + tags                 = {
+          + "Environment" = "prod"
+          + "Name"        = "prod-catalog-service-repo"
+        }
+      + tags_all             = {
+          + "Environment" = "prod"
+          + "ManagedBy"   = "Terraform"
+          + "Name"        = "prod-catalog-service-repo"
+          + "Owner"       = "3mr-devops"
+          + "Project"     = "ecommerce-microservices"
+        }
+
+      + image_scanning_configuration {
+          + scan_on_push = true
+        }
+    }
+
+  # module.compute.aws_ecr_repository.services["frontend"] will be created
+  + resource "aws_ecr_repository" "services" {
+      + arn                  = (known after apply)
+      + force_delete         = true
+      + id                   = (known after apply)
+      + image_tag_mutability = "MUTABLE"
+      + name                 = "prod-frontend"
+      + registry_id          = (known after apply)
+      + repository_url       = (known after apply)
+      + tags                 = {
+          + "Environment" = "prod"
+          + "Name"        = "prod-frontend-repo"
+        }
+      + tags_all             = {
+          + "Environment" = "prod"
+          + "ManagedBy"   = "Terraform"
+          + "Name"        = "prod-frontend-repo"
+          + "Owner"       = "3mr-devops"
+          + "Project"     = "ecommerce-microservices"
+        }
+
+      + image_scanning_configuration {
+          + scan_on_push = true
+        }
+    }
+
+  # module.compute.aws_ecr_repository.services["order-service"] will be created
+  + resource "aws_ecr_repository" "services" {
+      + arn                  = (known after apply)
+      + force_delete         = true
+      + id                   = (known after apply)
+      + image_tag_mutability = "MUTABLE"
+      + name                 = "prod-order-service"
+      + registry_id          = (known after apply)
+      + repository_url       = (known after apply)
+      + tags                 = {
+          + "Environment" = "prod"
+          + "Name"        = "prod-order-service-repo"
+        }
+      + tags_all             = {
+          + "Environment" = "prod"
+          + "ManagedBy"   = "Terraform"
+          + "Name"        = "prod-order-service-repo"
+          + "Owner"       = "3mr-devops"
+          + "Project"     = "ecommerce-microservices"
+        }
+
+      + image_scanning_configuration {
+          + scan_on_push = true
+        }
+    }
+
+  # module.compute.aws_ecr_repository.services["payment-service"] will be created
+  + resource "aws_ecr_repository" "services" {
+      + arn                  = (known after apply)
+      + force_delete         = true
+      + id                   = (known after apply)
+      + image_tag_mutability = "MUTABLE"
+      + name                 = "prod-payment-service"
+      + registry_id          = (known after apply)
+      + repository_url       = (known after apply)
+      + tags                 = {
+          + "Environment" = "prod"
+          + "Name"        = "prod-payment-service-repo"
+        }
+      + tags_all             = {
+          + "Environment" = "prod"
+          + "ManagedBy"   = "Terraform"
+          + "Name"        = "prod-payment-service-repo"
+          + "Owner"       = "3mr-devops"
+          + "Project"     = "ecommerce-microservices"
+        }
+
+      + image_scanning_configuration {
+          + scan_on_push = true
+        }
+    }
+
+  # module.compute.aws_ecr_repository.services["user-service"] will be created
+  + resource "aws_ecr_repository" "services" {
+      + arn                  = (known after apply)
+      + force_delete         = true
+      + id                   = (known after apply)
+      + image_tag_mutability = "MUTABLE"
+      + name                 = "prod-user-service"
+      + registry_id          = (known after apply)
+      + repository_url       = (known after apply)
+      + tags                 = {
+          + "Environment" = "prod"
+          + "Name"        = "prod-user-service-repo"
+        }
+      + tags_all             = {
+          + "Environment" = "prod"
+          + "ManagedBy"   = "Terraform"
+          + "Name"        = "prod-user-service-repo"
+          + "Owner"       = "3mr-devops"
+          + "Project"     = "ecommerce-microservices"
+        }
+
+      + image_scanning_configuration {
+          + scan_on_push = true
+        }
+    }
+
+  # module.compute.aws_iam_instance_profile.ec2 will be created
+  + resource "aws_iam_instance_profile" "ec2" {
+      + arn         = (known after apply)
+      + create_date = (known after apply)
+      + id          = (known after apply)
+      + name        = "shop-prod-ec2-profile"
+      + name_prefix = (known after apply)
+      + path        = "/"
+      + role        = "shop-prod-ec2-role"
+      + tags_all    = {
+          + "Environment" = "prod"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "3mr-devops"
+          + "Project"     = "ecommerce-microservices"
+        }
+      + unique_id   = (known after apply)
+    }
+
+  # module.compute.aws_iam_role.ec2 will be created
+  + resource "aws_iam_role" "ec2" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + description           = "Role assumed by EC2 instances - allows SSM access and S3 writes for backups"
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "shop-prod-ec2-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "Environment" = "prod"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "3mr-devops"
+          + "Project"     = "ecommerce-microservices"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # module.compute.aws_iam_role.payment_lambda_role will be created
+  + resource "aws_iam_role" "payment_lambda_role" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "lambda.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "shop-prod-payment-lambda-role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "Environment" = "prod"
+          + "ManagedBy"   = "Terraform"
+          + "Owner"       = "3mr-devops"
+          + "Project"     = "ecommerce-microservices"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # module.compute.aws_iam_role_policy_attachment.lambda_basic_execution will be created
+  + resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      + role       = "shop-prod-payment-lambda-role"
+    }
+
+  # module.compute.aws_iam_role_policy_attachment.lambda_vpc_access will be created
+  + resource "aws_iam_role_policy_attachment" "lambda_vpc_access" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+      + role       = "shop-prod-payment-lambda-role"
+    }
+
+  # module.compute.aws_iam_role_policy_attachment.ssm will be created
+  + resource "aws_iam_role_policy_attachment" "ssm" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      + role       = "shop-prod-ec2-role"
+    }
+
+Plan: 14 to add, 0 to change, 0 to destroy.
+
+Warning: Value for undeclared variable
+
+The root module does not declare a variable named "environment" but a value
+was found in file "terraform.tfvars". If you meant to use this value, add a
+"variable" block to the configuration.
+
+To silence these warnings, use TF_VAR_... environment variables to provide
+certain "global" settings to all configurations in your organization. To
+reduce the verbosity of these warnings, use the -compact-warnings option.
+
+Warning: Backend configuration ignored
+
+  on ../../../modules/compute/versions.tf line 11, in terraform:
+  11:   backend "s3" {
+
+Any selected backend applies to the entire configuration, so Terraform
+expects backend configurations only in the root module.
+
+This is a warning rather than an error because it's sometimes convenient to
+temporarily call a root module as a child module for testing purposes, but
+this backend configuration block will have no effect.
+
+Error: Unable to find remote state
+
+  with module.compute.data.terraform_remote_state.network,
+  on ../../../modules/compute/data.tf line 1, in data "terraform_remote_state" "network":
+   1: data "terraform_remote_state" "network" {
+
+No stored state was found for the given workspace in the given backend.
+
+Error: Unable to find remote state
+
+  with module.compute.data.terraform_remote_state.storage,
+  on ../../../modules/compute/data.tf line 11, in data "terraform_remote_state" "storage":
+  11: data "terraform_remote_state" "storage" {
+
+No stored state was found for the given workspace in the given backend.
+
+Error: Archive creation error
+
+  with module.compute.data.archive_file.payment_lambda,
+  on ../../../modules/compute/lambda.tf line 2, in data "archive_file" "payment_lambda":
+   2: data "archive_file" "payment_lambda" {
+
+error creating archive: error archiving file: could not archive missing file:
+../../../modules/compute/../ecommerce-microservices/services/payment-service/lambda_handler.py
