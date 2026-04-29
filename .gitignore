@@ -1,6 +1,9 @@
 # ── Environment ──
 .env
 
+# ── Kubernetes Secrets (never commit real passwords) ──
+web-app/k8s/secrets/
+
 # ── Node ──
 node_modules/
 npm-debug.log*
