@@ -22,7 +22,7 @@
 | :--- | :--- | :--- |
 | **Edge** | CloudFront (CDN) | SSL/HTTPS Termination |
 | **Entry** | Nginx Reverse Proxy | Application Load Balancer (ALB) |
-| **Backend** | Node.js, Python 3.12 | Auto Scaling Group (Private Subnets) |
+| **Backend** | Node.js, Python 3.12 | Kubernetes Pods (EKS) in Private Subnets |
 | **Data** | Mongo, Postgres, Redis | S3 Customer Data (AES-256) |
 | **IaC** | Terraform 1.5+ | Remote S3 State + DynamoDB Locking |
 | **CI/CD** | GitHub Actions | GitOps Pattern (Production & Previews) |
@@ -78,7 +78,7 @@ The application has been modernized to run on **Amazon Elastic Kubernetes Servic
 Every service has a dedicated pipeline that triggers on path-specific changes:
 1. **OIDC Auth**: GitHub assumes `GitHubActionRole` via OIDC.
 2. **Build**: Multi-stage Docker build → Push to **Amazon ECR**.
-3. **Deploy**: Update GitOps Repo + **SSM Shell Command** to EC2 for zero-downtime `docker-compose up`.
+3. **Deploy**: Update GitOps Repo + Trigger ArgoCD / `kubectl set image` for zero-downtime rolling updates.
 
 #### PR Preview Environments
 Labeling a PR with `pr-deploy` spins up a temporary environment (Push to Docker Hub + GitOps manifest creation), which is automatically cleaned up on PR close.
@@ -87,7 +87,7 @@ Labeling a PR with `pr-deploy` spins up a temporary environment (Push to Docker 
 
 ### 🔒 Security Implementation
 
-- **Compute**: Instances reside in **Private Subnets**; SSH disabled (Access via SSM Session Manager).
+- **Compute**: Nodes reside in **Private Subnets**; SSH disabled (Access managed via EKS API and SSM).
 - **Network**: Strict SG rules (ALB → EC2 → DB); VPC Endpoints for internal service traffic.
 - **Docker**: All images pass **ECR Scan-on-Push**; services run as `USER node` (non-root).
 - **IaC**: State files encrypted at rest; sensitive variables injected at runtime via userdata.
@@ -111,7 +111,7 @@ cd web-app/ecommerce-microservices && docker-compose up -d
 
 For detailed onboarding, environment setup, and branching strategies, please refer to:
 - [CONTRIBUTING.md](./CONTRIBUTING.md) — How to contribute and code standards.
-- [docs/environments.md](./web-app/environments/README.md) — Detailed infra deployment order.
+- [web-app/environments/README.md](./web-app/environments/README.md) — Detailed infra deployment order.
 
 **Quick Setup Checklist:**
 1. Configure AWS CLI with `AdministratorAccess`.
