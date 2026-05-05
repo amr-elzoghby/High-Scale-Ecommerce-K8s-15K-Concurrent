@@ -44,6 +44,11 @@ module "eks" {
   # ─── Network (reads VPC & subnets from network remote state) ──────────────
   remote_state_bucket      = "tf-state-ecommerce-microservices-3mr"
   network_remote_state_key = "prod/network/terraform.tfstate"
+
+  # ─── Spot Node Group (Application Scaling for 10k users) ──────────────────
+  spot_min_size     = 3   
+  spot_desired_size = 3
+  spot_max_size     = 20 
 }
 
 output "cluster_name" {

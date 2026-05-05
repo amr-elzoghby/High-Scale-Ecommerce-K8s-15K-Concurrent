@@ -4,7 +4,7 @@ metadata:
   name: catalog-service
   namespace: ecommerce-apps      
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: catalog-service
