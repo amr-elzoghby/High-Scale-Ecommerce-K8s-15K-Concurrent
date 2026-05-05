@@ -76,7 +76,32 @@ variable "remote_state_bucket" {
   type        = string
 }
 variable "node_capacity_type" {
-  description = "Capacity type of the node group"
+  description = "Capacity type of the stable node group"
   type        = string
   default     = "ON_DEMAND"
+}
+
+# ─── Spot Node Group ──────────────────────────────────────────────────────────────
+variable "spot_instance_types" {
+  description = "List of EC2 instance types for the Spot node group (multiple for fallback)"
+  type        = list(string)
+  default     = ["t3.medium", "t3a.medium", "t2.medium"]
+}
+
+variable "spot_desired_size" {
+  description = "Desired number of Spot worker nodes"
+  type        = number
+  default     = 2
+}
+
+variable "spot_min_size" {
+  description = "Minimum number of Spot worker nodes"
+  type        = number
+  default     = 2
+}
+
+variable "spot_max_size" {
+  description = "Maximum number of Spot worker nodes for autoscaling"
+  type        = number
+  default     = 10
 }

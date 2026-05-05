@@ -13,9 +13,13 @@ spec:
       labels:
         app: catalog-service
     spec:
+      imagePullSecrets:
+        - name: regcred
+      nodeSelector:
+        role: apps
       containers:
         - name: catalog-service
-          image: 323398832779.dkr.ecr.me-south-1.amazonaws.com/catalog-service:latest
+          image: 644981759771.dkr.ecr.us-east-1.amazonaws.com/catalog-service:latest
           ports:
             - containerPort: 3002
           env:
@@ -26,6 +30,13 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: MONGO_URI
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
 ---
 apiVersion: v1
 kind: Service
@@ -38,3 +49,23 @@ spec:
   ports:
     - port: 3002
       targetPort: 3002
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: catalog-service-hpa
+  namespace: ecommerce-apps
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: catalog-service
+  minReplicas: 2
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60

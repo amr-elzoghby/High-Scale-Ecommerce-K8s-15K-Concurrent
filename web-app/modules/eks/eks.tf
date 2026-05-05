@@ -20,6 +20,8 @@ resource "aws_eks_cluster" "main" {
   version  = var.cluster_version
   role_arn = aws_iam_role.eks_cluster.arn
 
+  enabled_cluster_log_types = ["api", "audit", "authenticator"]
+
   vpc_config {
     subnet_ids              = concat(local.private_subnet_ids, local.public_subnet_ids)
     endpoint_private_access = true
@@ -31,14 +33,14 @@ resource "aws_eks_cluster" "main" {
   ]
 }
 
-# ─── ON_DEMAND Node Group (Worker Nodes) ────────────────────────────────────────────────
+# ─── ON_DEMAND Node Group (Databases & Stable Workloads) ────────────────────────────────
 resource "aws_eks_node_group" "workers" {
   cluster_name    = aws_eks_cluster.main.name
-  node_group_name = "${var.name_prefix}-workers"
+  node_group_name = "${var.name_prefix}-workers-stable"
   node_role_arn   = aws_iam_role.eks_nodes.arn
   subnet_ids      = local.private_subnet_ids
   instance_types  = [var.node_instance_type]
-  capacity_type = var.node_capacity_type
+  capacity_type   = "ON_DEMAND"
 
   labels = {
     role = "stable"
@@ -54,6 +56,11 @@ resource "aws_eks_node_group" "workers" {
     max_unavailable = 1
   }
 
+  tags = {
+    "k8s.io/cluster-autoscaler/enabled"             = "true"
+    "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
+  }
+
   depends_on = [
     aws_iam_role_policy_attachment.eks_worker_node_policy,
     aws_iam_role_policy_attachment.eks_cni_policy,
@@ -61,29 +68,32 @@ resource "aws_eks_node_group" "workers" {
   ]
 } 
 
-# ───Spot Node Group (Worker Nodes) ────────────────────────────────────────────────
-
+# ─── Spot Node Group (Application Workloads) ──────────────────────────────────────────
 resource "aws_eks_node_group" "workers_spot" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.name_prefix}-workers-spot"
   node_role_arn   = aws_iam_role.eks_nodes.arn
   subnet_ids      = local.private_subnet_ids
-  instance_types  = [var.node_instance_type]
-  capacity_type = "SPOT"
-
+  capacity_type   = "SPOT"
+  instance_types = var.spot_instance_types
 
   labels = {
     role = "apps"
   }
 
   scaling_config {
-    desired_size = 1
-    max_size     = 2
-    min_size     = 1
+    desired_size = var.spot_desired_size
+    min_size     = var.spot_min_size
+    max_size     = var.spot_max_size
   }
 
   update_config {
     max_unavailable = 1
+  }
+
+  tags = {
+    "k8s.io/cluster-autoscaler/enabled"             = "true"
+    "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
   }
 
   depends_on = [
