@@ -58,3 +58,41 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
 
   tags = { Name = "${var.name_prefix}-ecr-dkr-endpoint" }
 }
+
+# ─── 4. EKS Interface Endpoint ────────────────────────────────────────────────
+resource "aws_vpc_endpoint" "eks" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${var.aws_region}.eks"
+  vpc_endpoint_type   = "Interface"
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  subnet_ids          = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+  private_dns_enabled = true
+
+  tags = { Name = "${var.name_prefix}-eks-endpoint" }
+}
+
+# ─── 5. EC2 Interface Endpoint ────────────────────────────────────────────────
+# Required for node bootstrapping and instance metadata operations.
+resource "aws_vpc_endpoint" "ec2" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${var.aws_region}.ec2"
+  vpc_endpoint_type   = "Interface"
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  subnet_ids          = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+  private_dns_enabled = true
+
+  tags = { Name = "${var.name_prefix}-ec2-endpoint" }
+}
+
+# ─── 6. STS Interface Endpoint ────────────────────────────────────────────────
+# Required for IRSA (IAM Roles for Service Accounts) token exchange.
+resource "aws_vpc_endpoint" "sts" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${var.aws_region}.sts"
+  vpc_endpoint_type   = "Interface"
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  subnet_ids          = [aws_subnet.private_1.id, aws_subnet.private_2.id]
+  private_dns_enabled = true
+
+  tags = { Name = "${var.name_prefix}-sts-endpoint" }
+}
