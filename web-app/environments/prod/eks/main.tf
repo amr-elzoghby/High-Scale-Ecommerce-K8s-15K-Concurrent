@@ -46,9 +46,15 @@ module "eks" {
   network_remote_state_key = "prod/network/terraform.tfstate"
 
   # ─── Spot Node Group (Application Scaling for 10k users) ──────────────────
-  spot_min_size     = 3   
+  spot_min_size     = 3
   spot_desired_size = 3
-  spot_max_size     = 20 
+  spot_max_size     = 20
+
+  # ─── Monitoring ───────────────────────────────────────────────────────────
+  # Secret must exist in AWS Secrets Manager before terraform apply:
+  # aws secretsmanager create-secret --name "shop-prod/grafana-admin-password" \
+  #   --secret-string "YourPassword" --region us-east-1
+  name_prefix = "shop-prod"
 }
 
 output "cluster_name" {
