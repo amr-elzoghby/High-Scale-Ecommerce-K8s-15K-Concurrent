@@ -25,3 +25,39 @@ resource "helm_release" "cluster_autoscaler" {
     })
   ]
 }
+
+# ─── Prometheus + Grafana + AlertManager ─────────────────────────────────────
+resource "helm_release" "prometheus" {
+  name             = "prometheus"
+  repository       = "https://prometheus-community.github.io/helm-charts"
+  chart            = "kube-prometheus-stack"
+  namespace        = "monitoring"
+  create_namespace = true
+
+  values = [
+    templatefile("${path.module}/templates/prometheus-values.yaml.tpl", {
+      grafana_password = data.aws_secretsmanager_secret_version.grafana.secret_string
+    })
+  ]
+
+  depends_on = [
+    aws_eks_addon.ebs_csi_driver
+  ]
+}
+
+# ─── Loki + Promtail ─────────────────────────────────────────────────────────
+resource "helm_release" "loki" {
+  name             = "loki-stack"
+  repository       = "https://grafana.github.io/helm-charts"
+  chart            = "loki-stack"
+  namespace        = "monitoring"
+  create_namespace = true
+
+  values = [
+    file("${path.module}/templates/loki-values.yaml.tpl")
+  ]
+
+  depends_on = [
+    aws_eks_addon.ebs_csi_driver
+  ]
+}
