@@ -178,6 +178,22 @@ Traffic Spike → CPU > 60% on Pod
 
 ---
 
+## 📈 Load Testing & Auto-Scaling Evidence
+
+To verify the production-readiness of the infrastructure, a load test was performed simulating 100 concurrent users. The system successfully demonstrated horizontal pod autoscaling (HPA).
+
+### 1. Real-time Pod Scaling (Terminal)
+As the load increased, the Kubernetes HPA automatically triggered the creation of new pods to handle the traffic. You can see the pods moving from `Pending` to `Running` in seconds.
+
+![Terminal Scaling](docs/images/terminal-scaling.png)
+
+### 2. Metrics Spike (Grafana)
+The observability stack captured a clear spike in CPU usage and a corresponding increase in the total number of running pods (from 22 to 26+).
+
+![Grafana Spike](docs/images/grafana-spike.png)
+
+---
+
 ## 🔒 Security Highlights
 
 - **No NAT Gateway** — VPC Endpoints (EKS, EC2, ECR, S3, STS, SSM) for private subnet access
