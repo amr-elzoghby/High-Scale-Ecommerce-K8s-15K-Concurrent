@@ -1,139 +1,238 @@
-# ShopMicro — E-Commerce Microservices
+# ShopMicro — Production-Grade E-Commerce on Kubernetes
 
-> **High-availability e-commerce platform** leveraging polyglot microservices, modular Terraform, and OIDC-authenticated CI/CD pipelines. Engineered to handle **10,000+ concurrent users** with automated horizontal and cluster-level scaling.
+> A **production-ready e-commerce platform** built on AWS EKS with 5 Node.js microservices, automated scaling, and a full observability stack (Prometheus, Grafana, Loki). Engineered to handle **4,000+ concurrent users** with zero-downtime deployments.
 
 ![Architecture Diagram](docs/images/architecture-diagram.png)
 
 ---
 
-### 🚀 Core DevOps Highlights
+## ⚡ Quick Start (Local — Docker Compose)
 
-- **Cost-Optimized VPC**: Replaced NAT Gateway with **VPC Endpoints** (S3, SSM, ECR), saving ~$32/month.
-- **Identity Federation**: Workflows use **GitHub OIDC** for AWS authentication (No stored secrets).
-- **Auto-Scaling at Two Levels**: **HPA** scales pods on CPU pressure; **Cluster Autoscaler** adds EC2 Spot nodes when pods are pending.
-- **Helm-Automated Add-ons**: Metrics Server and Cluster Autoscaler deployed via `helm_release` in Terraform — zero manual CLI commands.
-- **Workload Isolation**: Microservices on **Spot nodes** (cost-optimized); Databases on **On-Demand nodes** (stability-first).
-- **Security-First**: Enforced **IMDSv2**, multi-stage Docker builds (non-root), IRSA for pod-level AWS permissions, and encrypted S3 state backends.
-
----
-
-### 🛠️ Technology Stack
-
-| Layer | Tech | Infrastructure (AWS) |
-| :--- | :--- | :--- |
-| **Edge** | CloudFront (CDN) | SSL/HTTPS Termination |
-| **Entry** | Nginx Reverse Proxy | Application Load Balancer (ALB) |
-| **Backend** | Node.js, Python 3.12 | Kubernetes Pods (EKS) in Private Subnets |
-| **Data** | Mongo, Postgres, Redis | S3 Customer Data (AES-256) |
-| **IaC** | Terraform 1.5+ | Remote S3 State + DynamoDB Locking |
-| **CI/CD** | GitHub Actions | GitOps Pattern (Production & Previews) |
-| **Scaling** | HPA + Cluster Autoscaler | Helm-deployed via Terraform |
-
----
-
-### 📂 Project Architecture
+No AWS account needed. Runs fully on your machine in ~2 minutes.
 
 ```bash
-├── .github/workflows/    # OIDC-based CI/CD (Deploy + Preview + Cleanup pipelines)
-├── web-app/
-│   ├── ecommerce-microservices/ # Main App (Nginx, 5 Microservices, Compose)
-│   ├── k8s/              # Kubernetes Manifests (Apps, DBs, Secrets, Ingress)
-│   │   └── apps/         # HPA configs (maxReplicas: 20, CPU target: 60%)
-│   ├── modules/          # Reusable IaC: [Network, Compute, Storage, IAM, EKS]
-│   │   └── eks/          # EKS module: Helm releases, IRSA roles, dual node groups
-│   └── environments/     # Layered Orchestration (Dev/Prod)
-└── docs/images/          # System Architecture Diagrams
-```
+# 1. Clone the repo
+git clone https://github.com/amr-elzoghby/web-app.git
+cd web-app/ecommerce-microservices
 
----
-
-### 🏗️ Infrastructure as Code
-
-Modular Terraform with **Isolated State Layers** to minimize blast radius:
-
-1. **Network**: VPC, Public/Private Subnets, Security Groups, VPC Endpoints.
-2. **Storage**: Encrypted S3 buckets with Versioning and Lifecycle policies.
-3. **EKS**: Cluster + dual node groups + Metrics Server + Cluster Autoscaler (via Helm).
-
-**Deployment Order (required — each layer depends on the previous):**
-```bash
-cd environments/<env>/network && terraform apply
-cd environments/<env>/storage && terraform apply
-cd environments/<env>/eks    && terraform apply
-```
-
----
-
-### ☸️ Kubernetes Orchestration (EKS)
-
-The application runs on **Amazon EKS** with a two-tier node strategy:
-
-#### Node Groups
-| Node Group | Type | Workload | Min | Max |
-| :--- | :--- | :--- | :--- | :--- |
-| `workers-stable` | On-Demand | Databases (Mongo, Postgres) | 2 | 4 |
-| `workers-spot` | Spot (`t3.medium`, `t3a.medium`, `t2.medium`) | Microservices | 3 | 20 |
-
-> Spot nodes use 3 instance types as a fallback strategy — if one type is unavailable, AWS automatically provisions another.
-
-#### Auto-Scaling Architecture
-- **HPA**: Each of the 5 microservices scales **2 → 20 replicas** when CPU exceeds 60%.
-- **Cluster Autoscaler**: Adds Spot EC2 nodes automatically when pods enter `Pending` state. Deployed via Terraform `helm_release` with IRSA-secured IAM permissions.
-- **Metrics Server**: Auto-deployed via Helm — feeds real-time CPU/Memory data to the HPA.
-
-#### Other Key Features
-- **Namespaces**: `ecommerce-apps`, `ecommerce-data`, `ecommerce-ingress` for clean separation.
-- **StatefulSets**: Databases use `PersistentVolumeClaims` — data survives pod restarts.
-- **Secrets Management**: Kubernetes `Secret` objects injected at runtime, never in source control.
-- **Control Plane Logging**: API, Audit, and Authenticator logs streamed to CloudWatch.
-
----
-
-### 🔄 CI/CD Pipelines
-
-#### Production Delivery (`main` branch)
-1. **OIDC Auth**: GitHub assumes `GitHubActionRole` via OIDC (no stored secrets).
-2. **Build**: Multi-stage Docker build → Push to **Amazon ECR**.
-3. **Deploy**: `kubectl set image` for zero-downtime rolling updates.
-
-#### PR Preview Environments
-Labeling a PR with `pr-deploy` spins up a temporary environment, automatically cleaned up on PR close.
-
----
-
-### 🔒 Security Implementation
-
-- **Compute**: Nodes in **Private Subnets**; SSH disabled (Access via EKS API and SSM).
-- **Network**: Strict SG rules (ALB → Pods → DB); VPC Endpoints for internal traffic.
-- **Docker**: All images pass **ECR Scan-on-Push**; services run as `USER node` (non-root).
-- **IAM**: Pod-level AWS access via **IRSA** — Cluster Autoscaler gets only the permissions it needs, not full node-level access.
-- **IaC**: State files encrypted at rest; sensitive variables injected at runtime.
-
----
-
-### 🚦 Quick Start
-
-**Local Development:**
-```bash
+# 2. Set environment variables
 cp .env.example .env
-cd web-app/ecommerce-microservices && docker-compose up -d
+# Edit .env with your values (Mongo URI, Postgres password, JWT secret)
+
+# 3. Start all services
+docker-compose up -d
 ```
 
 **Access Points:**
-- **Storefront**: `http://localhost/`
-- **Catalog API**: `http://localhost/api/products`
-- **User API**: `http://localhost/api/users`
+| Service | URL |
+|:---|:---|
+| Storefront | http://localhost/ |
+| Catalog API | http://localhost/api/products |
+| User API | http://localhost/api/users |
+| Cart API | http://localhost/api/cart |
+| Order API | http://localhost/api/orders |
 
 ---
 
-### 🤝 Collaboration & Development
+## ☸️ Deploy to AWS EKS (Production)
 
-- [CONTRIBUTING.md](./CONTRIBUTING.md) — How to contribute and code standards.
-- [web-app/environments/README.md](./web-app/environments/README.md) — Detailed infra deployment order.
+### Prerequisites
+```bash
+# Tools required
+aws --version        # AWS CLI v2
+terraform --version  # v1.5+
+kubectl version      # v1.28+
+helm version         # v3+
+```
 
-**Quick Setup Checklist:**
-1. Configure AWS CLI with `AdministratorAccess`.
-2. Install Terraform `v1.5+`, Docker Desktop, and `helm` CLI.
-3. Use `terraform fmt` before every commit.
+### Step 1 — AWS Setup
+```bash
+# Configure credentials
+aws configure
 
-<p align="center"><sub>Built with ❤️ by Amr Elzoghby</sub></p>
+# Create S3 bucket for Terraform state (one-time)
+aws s3 mb s3://tf-state-ecommerce-microservices-3mr --region us-east-1
+
+# Create Grafana password secret
+aws secretsmanager create-secret \
+  --name shop-prod/grafana-admin-password \
+  --secret-string "YourSecurePassword123!" \
+  --region us-east-1
+```
+
+### Step 2 — Deploy Infrastructure (in order)
+```bash
+# 1. Network (VPC, Subnets, VPC Endpoints)
+cd web-app/environments/prod/network
+terraform init && terraform apply
+
+# 2. EKS Cluster + Monitoring Stack
+cd ../eks
+terraform init && terraform apply
+# ⏱️ Takes ~20 minutes
+```
+
+### Step 3 — Connect & Deploy Apps
+```bash
+# Connect kubectl to cluster
+aws eks update-kubeconfig --name ecommerce-prod --region us-east-1
+
+# Verify nodes are ready
+kubectl get nodes
+
+# Deploy microservices
+kubectl apply -f web-app/k8s/apps/
+
+# Deploy monitoring ServiceMonitors
+kubectl apply -f web-app/k8s/monitoring/
+```
+
+### Step 4 — Open Grafana
+```bash
+kubectl port-forward svc/prometheus-grafana 3000:80 -n monitoring
+# Open http://localhost:3000
+# Login: admin / (password from Secrets Manager)
+```
+
+> Import dashboards: **15757** (Cluster), **15760** (HPA), **6417** (Nodes), **13639** (Logs)
+
+---
+
+## 🏗️ Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    Internet                         │
+└─────────────────┬───────────────────────────────────┘
+                  │
+        ┌─────────▼─────────┐
+        │  Application LB   │  (Public Subnets)
+        └─────────┬─────────┘
+                  │
+        ┌─────────▼─────────┐
+        │   Nginx Ingress   │  (Routes traffic)
+        └─────────┬─────────┘
+                  │  Private Subnets
+    ┌─────────────┼─────────────┐
+    │             │             │
+┌───▼───┐   ┌────▼────┐  ┌────▼────┐
+│catalog│   │  user   │  │  cart   │  ... (5 services)
+└───────┘   └─────────┘  └─────────┘
+    │             │
+┌───▼───┐   ┌────▼────┐
+│MongoDB│   │PostgreSQL│  (StatefulSets on On-Demand nodes)
+└───────┘   └─────────┘
+```
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology | AWS Service |
+|:---|:---|:---|
+| **Backend** | Node.js + Express | EKS (Kubernetes 1.30) |
+| **Databases** | MongoDB, PostgreSQL, Redis | StatefulSets + EBS volumes |
+| **Ingress** | Nginx | Application Load Balancer |
+| **IaC** | Terraform 1.5+ | S3 State + DynamoDB Lock |
+| **CI/CD** | GitHub Actions + OIDC | ECR (Docker Registry) |
+| **Scaling** | HPA + Cluster Autoscaler | EC2 Spot + On-Demand |
+| **Monitoring** | Prometheus + Grafana | Persistent EBS (50GB) |
+| **Logging** | Loki + Promtail | Persistent EBS (20GB) |
+| **Secrets** | Kubernetes Secrets | AWS Secrets Manager |
+
+---
+
+## 📊 Observability Stack
+
+Automatically deployed via Terraform Helm releases:
+
+| Tool | Purpose | Access |
+|:---|:---|:---|
+| **Prometheus** | Metrics collection from all pods | `:9090` |
+| **Grafana** | Real-time dashboards | `:3000` (port-forwarded) |
+| **Loki** | Log aggregation | Internal |
+| **Promtail** | Log shipping from pods | DaemonSet |
+| **cAdvisor** | Container resource metrics | Built-in to kubelet |
+
+**ServiceMonitors** auto-configure Prometheus to scrape all 5 microservices.
+
+---
+
+## ⚙️ Auto-Scaling Architecture
+
+```
+Traffic Spike → CPU > 60% on Pod
+    → HPA scales Pod replicas (2 → 20)
+    → New pods Pending (not enough nodes)
+    → Cluster Autoscaler provisions Spot EC2 node
+    → Pods scheduled, traffic served
+```
+
+| Resource | Min | Max | Trigger |
+|:---|:---|:---|:---|
+| Pods (per service) | 2 | 20 | CPU > 60% |
+| Spot Nodes | 2 | 10 | Pending pods |
+| On-Demand Nodes | 2 | 4 | Manual |
+
+**Tested capacity:** ~4,000 concurrent users before horizontal scaling kicks in.
+
+---
+
+## 🔒 Security Highlights
+
+- **No NAT Gateway** — VPC Endpoints (EKS, EC2, ECR, S3, STS, SSM) for private subnet access
+- **OIDC Auth** — GitHub Actions authenticates to AWS without stored credentials
+- **IRSA** — Each pod gets minimal AWS permissions via IAM Roles for Service Accounts
+- **IMDSv2** enforced on all EC2 nodes
+- **Non-root containers** — All services run as `USER node`
+- **ECR Scan-on-Push** — Images scanned for vulnerabilities on every push
+
+---
+
+## 📂 Project Structure
+
+```
+.
+├── .github/workflows/          # CI/CD (OIDC Deploy + PR Preview + Cleanup)
+└── web-app/
+    ├── ecommerce-microservices/
+    │   ├── services/           # 5 Node.js microservices
+    │   │   ├── user-service/   # Auth, JWT (Port 3001)
+    │   │   ├── catalog-service/# Products (Port 3002)
+    │   │   ├── cart-service/   # Cart + Redis (Port 3003)
+    │   │   ├── order-service/  # Orders (Port 3004)
+    │   │   └── payment-service/# Payments (Port 3005)
+    │   ├── nginx/              # Reverse proxy config
+    │   └── docker-compose.yml  # Local development
+    ├── k8s/
+    │   ├── apps/               # Deployments, Services, HPAs
+    │   ├── databases/          # StatefulSets (Mongo, Postgres, Redis)
+    │   ├── ingress/            # Nginx Ingress rules
+    │   └── monitoring/         # ServiceMonitors for Prometheus
+    ├── modules/
+    │   ├── network/            # VPC, Subnets, Security Groups, VPC Endpoints
+    │   └── eks/                # EKS Cluster, Node Groups, Helm releases
+    └── environments/
+        ├── prod/               # Production Terraform configs
+        └── dev/                # Development Terraform configs
+```
+
+---
+
+## 🧹 Teardown (Avoid AWS Charges)
+
+```bash
+# 1. Delete EKS (most expensive)
+cd web-app/environments/prod/eks
+terraform destroy -auto-approve
+
+# 2. Delete Network
+cd ../network
+terraform destroy -auto-approve
+```
+
+> ⚠️ Always destroy **eks first**, then **network**. Reversing the order will cause dependency errors.
+
+---
+
+<p align="center"><sub>Built with ❤️ by <a href="https://github.com/amr-elzoghby">Amr Elzoghby</a></sub></p>
