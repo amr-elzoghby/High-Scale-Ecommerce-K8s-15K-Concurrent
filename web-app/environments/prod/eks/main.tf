@@ -35,8 +35,8 @@ module "eks" {
   cluster_name    = var.cluster_name
   cluster_version = "1.30"
 
-  # ─── Worker Nodes  ──────────────
-  node_instance_type = "m7i-flex.large"
+  # ─── Worker Nodes (On-Demand) ───────────────────────────────────────────
+  node_instance_type = "t3.medium"
   node_desired_size  = 2
   node_min_size      = 2
   node_max_size      = 4
@@ -45,11 +45,11 @@ module "eks" {
   remote_state_bucket      = "tf-state-ecommerce-microservices-3mr"
   network_remote_state_key = "prod/network/terraform.tfstate"
 
-  # ─── Spot Node Group ─────────
-  spot_instance_types = ["c7i-flex.large", "m7i-flex.large", "t3.small"]
-  spot_min_size     = 2
-  spot_desired_size = 2
-  spot_max_size     = 10
+  # ─── Spot Node Group (Application Scaling) ──────────────────────────────
+  spot_instance_types = ["t3.medium", "t3a.medium", "t2.medium"]
+  spot_min_size     = 3
+  spot_desired_size = 3
+  spot_max_size     = 20
 }
 
 output "cluster_name" {
