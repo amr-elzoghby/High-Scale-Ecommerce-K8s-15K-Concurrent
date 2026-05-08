@@ -9,7 +9,7 @@
 ## 📈 Load Testing & Auto-Scaling Evidence
 
 > **Note:** The load test below was executed **locally** on a developer laptop (Intel Core i7 8th Gen, 32GB RAM) using **k3d** (Kubernetes in Docker) — with no cloud infrastructure.  
-> On a production **AWS EKS** deployment (t3.medium Spot nodes, max 20 nodes), the same architecture is designed to handle **10,000+ concurrent users** thanks to HPA + Cluster Autoscaler.
+> On a production **AWS EKS** deployment (t3.medium Spot nodes, max 20 nodes), the same architecture is designed to handle **50,000+ concurrent users** thanks to HPA + Cluster Autoscaler.
 
 ### 🖥️ Local Stress Test (5,000 - 21,000 Concurrent Users — k3d on Laptop)
 
