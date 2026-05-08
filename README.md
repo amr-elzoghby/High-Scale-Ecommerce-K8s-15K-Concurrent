@@ -1,6 +1,6 @@
-# ShopMicro — Production-Grade E-Commerce on Kubernetes
+# ShopScale — High-Performance E-Commerce on Kubernetes
 
-> A **production-ready e-commerce platform** built on AWS EKS with 5 Node.js microservices, automated scaling, and a full observability stack (Prometheus, Grafana, Loki). Engineered to handle **10,000+ concurrent users** on AWS.
+> A **production-ready e-commerce platform** built on AWS EKS with 5 Node.js microservices, automated scaling, and a full observability stack (Prometheus, Grafana, Loki). Engineered to handle **50,000+ concurrent users** on AWS.
 
 ![Architecture Diagram](docs/images/architecture-diagram.png)
 
