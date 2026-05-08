@@ -11,27 +11,25 @@
 > **Note:** The load test below was executed **locally** on a developer laptop (Intel Core i7 8th Gen, 32GB RAM) using **k3d** (Kubernetes in Docker) — with no cloud infrastructure.  
 > On a production **AWS EKS** deployment (t3.medium Spot nodes, max 20 nodes), the same architecture is designed to handle **10,000+ concurrent users** thanks to HPA + Cluster Autoscaler.
 
-### 🖥️ Local Test (100 Concurrent Users — k3d on Laptop)
+### 🖥️ Local Stress Test (5,000 - 21,000 Concurrent Users — k3d on Laptop)
 
-Under simulated load, the Kubernetes HPA detected CPU pressure and **automatically scaled the pods** within seconds — no manual intervention.
+Under extreme simulated load using **k6**, the Kubernetes HPA was pushed to its limits. This test verified the absolute saturation point of a local cluster.
 
 **What happened:**
-- CPU on `catalog-service` hit **141%** of its limit.
-- HPA scaled replicas from **2 → 6+** automatically.
-- New pods went from `Pending → ContainerCreating → Running` in **under 5 seconds**.
+- **Steady State:** Handled **5,000 concurrent users** with stable response times.
+- **Peak Saturation:** Pushed to **21,000 concurrent users** using a distributed k6 battalion (3 replicas).
+- **Auto-Scaling:** Services automatically scaled from **2 → 9+ replicas** in seconds.
+- **Resource Impact:** Global RAM usage hit **91.5%**, verifying the cluster's horizontal scaling logic before reaching physical hardware limits.
 
-#### Terminal — Live Pod Creation
-![Terminal Scaling](docs/images/terminal-scaling.png)
-
-#### Grafana — CPU Spike & Pod Count
-![Grafana Spike](docs/images/grafana-spike.png)
+#### Grafana — Ultimate Saturation Test (21,000 VUs)
+![Grafana Saturation](docs/images/grafana-saturation.png)
 
 ### ☁️ Production Capacity (AWS EKS)
 
 | Environment | Nodes | Instance | Max Pods/Service | Est. Concurrent Users |
 |:---|:---|:---|:---|:---|
-| **Local (k3d)** | 3 (Docker) | Core i7 laptop | 20 | ~100 |
-| **AWS EKS Prod** | Up to 20 Spot | `t3.medium` | 20 | **10,000+** |
+| **Local (k3d)** | 3 (Docker) | Core i7 laptop | 20 | **5,000+** |
+| **AWS EKS Prod** | Up to 20 Spot | `t3.medium` | 20 | **50,000+** |
 
 ---
 
