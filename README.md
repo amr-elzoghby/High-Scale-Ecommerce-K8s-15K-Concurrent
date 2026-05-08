@@ -1,6 +1,6 @@
-# High-Scale-Ecommerce-K8s-21K-Concurrent — Production-Grade ShopScale
+# High-Scale-Ecommerce-K8s-15K-Concurrent — Production-Grade ShopScale
 
-> A **production-ready e-commerce platform** built on AWS EKS with 5 Node.js microservices, automated scaling, and a full observability stack (Prometheus, Grafana, Loki). Engineered to handle **21,000+ concurrent users** on AWS.
+> A **production-ready e-commerce platform** built on AWS EKS with 5 Node.js microservices, automated scaling, and a full observability stack (Prometheus, Grafana, Loki). Engineered to handle **15,000+ concurrent users** (100,000+ daily) on AWS.
 
 ![Architecture Diagram](docs/images/architecture-diagram.png)
 
@@ -9,27 +9,27 @@
 ## 📈 Load Testing & Auto-Scaling Evidence
 
 > **Note:** The load test below was executed **locally** on a developer laptop (Intel Core i7 8th Gen, 32GB RAM) using **k3d** (Kubernetes in Docker) — with no cloud infrastructure.  
-> On a production **AWS EKS** deployment (t3.medium Spot nodes, max 20 nodes), the same architecture is designed to handle **21,000+ concurrent users** thanks to HPA + Cluster Autoscaler.
+> On a production **AWS EKS** deployment (t3.medium Spot nodes, max 20 nodes), the same architecture is designed to handle **15,000+ concurrent users** (100,000+ daily) thanks to HPA + Cluster Autoscaler.
 
-### 🖥️ Local Stress Test (5,000 - 21,000 Concurrent Users — k3d on Laptop)
+### 🖥️ Local Stress Test (4,000 Concurrent Users — k3d on Laptop)
 
 Under extreme simulated load using **k6**, the Kubernetes HPA was pushed to its limits. This test verified the absolute saturation point of a local cluster.
 
 **What happened:**
-- **Steady State:** Handled **5,000 concurrent users** with stable response times.
-- **Peak Saturation:** Pushed to **21,000 concurrent users** using a distributed k6 battalion (3 replicas).
+- **Steady State:** Handled **4,000 concurrent users** with stable response times.
+- **Peak Saturation:** Pushed the cluster to its absolute physical limits, verifying the horizontal scaling logic under extreme load.
 - **Auto-Scaling:** Services automatically scaled from **2 → 9+ replicas** in seconds.
 - **Resource Impact:** Global RAM usage hit **91.5%**, verifying the cluster's horizontal scaling logic before reaching physical hardware limits.
 
-#### Grafana — Ultimate Saturation Test (21,000 VUs)
+#### Grafana — Ultimate Saturation Test (4,000 VUs)
 ![Grafana Saturation](docs/images/grafana-saturation.png)
 
 ### ☁️ Production Capacity (AWS EKS)
 
 | Environment | Nodes | Instance | Max Pods/Service | Est. Concurrent Users |
 |:---|:---|:---|:---|:---|
-| **Local (k3d)** | 3 (Docker) | Core i7 laptop | 20 | **5,000+** |
-| **AWS EKS Prod** | Up to 20 Spot | `t3.medium` | 20 | **50,000+** |
+| **Local (k3d)** | 3 (Docker) | Core i7 laptop | 20 | **4,000** |
+| **AWS EKS Prod** | Up to 20 Spot | `t3.medium` | 20 | **15,000+ (100,000+ daily)** |
 
 ---
 
