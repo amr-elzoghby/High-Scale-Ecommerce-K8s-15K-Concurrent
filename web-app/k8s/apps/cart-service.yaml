@@ -30,6 +30,8 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: MONGO_URI
+            - name: REDIS_URL
+              value: "redis://redis.ecommerce-data:6379"
           resources:
             requests:
               cpu: "250m"

@@ -22,6 +22,19 @@ spec:
           image: 644981759771.dkr.ecr.us-east-1.amazonaws.com/user-service:latest
           ports:
             - containerPort: 3001
+          env:
+            - name: PORT
+              value: "3001"
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MONGO_URI
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_SECRET
           resources:
             requests:
               cpu: "250m"
