@@ -1,4 +1,4 @@
-# ShopScale — High-Performance E-Commerce on Kubernetes
+# High-Scale-Ecommerce-K8s-21K-Concurrent — Production-Grade ShopScale
 
 > A **production-ready e-commerce platform** built on AWS EKS with 5 Node.js microservices, automated scaling, and a full observability stack (Prometheus, Grafana, Loki). Engineered to handle **50,000+ concurrent users** on AWS.
 
