@@ -1,5 +1,5 @@
 # =============================================================================
-# Order Service — Build & Deploy to Production (ECR Version)
+# Order Service — Build & Deploy to AWS EKS (GitOps Version)
 # =============================================================================
 name: "Backend: Deploy Order Service"
 
@@ -43,21 +43,18 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/3MR-MLops/web-app-gitops.git gitops-repo
+          
+          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/amr-elzoghby/web-app-gitops.git gitops-repo
           cd gitops-repo
-          sed -i 's|image: .*webapp-order-service.*|image: ${{ steps.login-ecr.registry }}/prod-order-service|' deployment.yaml
-          sed -i '/image: .*prod-order-service/{n;s/\(tag: \).*/\1"v${{ github.run_number }}"/}' deployment.yaml
+          
+          TARGET_FILE="apps/order-service/deployment.yaml"
+          ECR_IMAGE="${{ steps.login-ecr.registry }}/prod-order-service"
+          NEW_TAG="v${{ github.run_number }}"
+          
+          sed -i "s|image: .*|image: $ECR_IMAGE:$NEW_TAG|g" $TARGET_FILE
+          
           if [ -n "$(git status --porcelain)" ]; then
-            git add deployment.yaml
-            git commit -m "Update order-service to ECR v${{ github.run_number }} [skip ci]"
+            git add $TARGET_FILE
+            git commit -m "chore(order): deploy $NEW_TAG to EKS [skip ci]"
             git push
           fi
-
-      - name: Trigger Update on EC2 via SSM
-        run: |
-          aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=tag:Name,Values=shop-prod-instance" \
-            --comment "Update order-service to v${{ github.run_number }} from ECR" \
-            --parameters 'commands=["cd /home/ubuntu/web-app/web-app/ecommerce-microservices", "docker-compose pull order-service", "docker-compose up -d order-service"]' \
-            --region us-east-1
