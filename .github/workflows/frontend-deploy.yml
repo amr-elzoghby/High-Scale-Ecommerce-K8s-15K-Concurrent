@@ -25,7 +25,7 @@ jobs:
 
       - name: Build and Push Image to Docker Hub
         env:
-          DOCKER_REPO: 3mrimlops/webapp-frontend
+          DOCKER_REPO: 3mrlmlops/webapp-frontend
           IMAGE_TAG: v${{ github.run_number }}
         run: |
           docker build -t $DOCKER_REPO:$IMAGE_TAG ./web-app/frontend
@@ -42,7 +42,7 @@ jobs:
           
           # Target file in the new structure
           TARGET_FILE="apps/frontend/deployment.yaml"
-          IMAGE_NAME="3mrimlops/webapp-frontend"
+          IMAGE_NAME="3mrlmlops/webapp-frontend"
           NEW_TAG="v${{ github.run_number }}"
           
           # Update the image tag in the deployment manifest
