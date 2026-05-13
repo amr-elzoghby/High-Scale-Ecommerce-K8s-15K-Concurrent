@@ -6,8 +6,8 @@
 /* ===== DESIGN TOKENS ===== */
 :root {
   --primary:        hsl(0, 0%, 0%);
-  --primary-light:  #ffe277;
-  --primary-dark:   #00cc9c;
+  --primary-light:  #deae00;
+  --primary-dark:   #ccbe00;
   --primary-glow:   rgba(124, 58, 237, 0.45);
   --accent:         #f472b6;
   --accent-glow:    rgba(244, 114, 182, 0.35);
