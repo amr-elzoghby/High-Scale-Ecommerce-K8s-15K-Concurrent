@@ -5,9 +5,9 @@
 
 /* ===== DESIGN TOKENS ===== */
 :root {
-  --primary:        hsl(0, 0%, 0%);
-  --primary-light:  #deae00;
-  --primary-dark:   #ccbe00;
+  --primary:        hsl(0, 100%, 50%);
+  --primary-light:  #4300de;
+  --primary-dark:   #00cc11;
   --primary-glow:   rgba(124, 58, 237, 0.45);
   --accent:         #f472b6;
   --accent-glow:    rgba(244, 114, 182, 0.35);
