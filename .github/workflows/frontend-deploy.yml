@@ -1,5 +1,5 @@
 # =============================================================================
-# Frontend — Build & Deploy to Production (ECR Version)
+# Frontend — Build & Deploy to Production (GitOps Version)
 # =============================================================================
 name: "Frontend: Deploy Service"
 
@@ -12,53 +12,47 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-          role-to-assume: arn:aws:iam::644981759771:role/GitHubActionRole
-          aws-region: us-east-1
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, Tag, and Push Image to Amazon ECR
+      - name: Build and Push Image to Docker Hub
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.registry }}
-          ECR_REPOSITORY: prod-frontend
+          DOCKER_REPO: 3mrimlops/webapp-frontend
           IMAGE_TAG: v${{ github.run_number }}
         run: |
-          # Build from the frontend context
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./web-app/frontend
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker build -t $DOCKER_REPO:$IMAGE_TAG ./web-app/frontend
+          docker push $DOCKER_REPO:$IMAGE_TAG
 
       - name: Update GitOps Repository
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/3MR-MLops/web-app-gitops.git gitops-repo
+          
+          # Clone the GitOps repo
+          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/amr-elzoghby/web-app-gitops.git gitops-repo
           cd gitops-repo
-          sed -i 's|image: .*webapp-frontend.*|image: ${{ steps.login-ecr.registry }}/prod-frontend|' deployment.yaml
-          sed -i '/image: .*prod-frontend/{n;s/\(tag: \).*/\1"v${{ github.run_number }}"/}' deployment.yaml
+          
+          # Target file in the new structure
+          TARGET_FILE="apps/frontend/deployment.yaml"
+          IMAGE_NAME="3mrimlops/webapp-frontend"
+          NEW_TAG="v${{ github.run_number }}"
+          
+          # Update the image tag in the deployment manifest
+          sed -i "s|image: $IMAGE_NAME:.*|image: $IMAGE_NAME:$NEW_TAG|g" $TARGET_FILE
+          
+          # Check for changes and push
           if [ -n "$(git status --porcelain)" ]; then
-            git add deployment.yaml
-            git commit -m "Update frontend to ECR v${{ github.run_number }} [skip ci]"
+            git add $TARGET_FILE
+            git commit -m "chore: update frontend to $NEW_TAG [skip ci]"
             git push
+          else
+            echo "No changes to commit"
           fi
-
-      - name: Trigger Update on EC2 via SSM
-        run: |
-          aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=tag:Name,Values=shop-prod-instance" \
-            --comment "Update frontend to v${{ github.run_number }} from ECR" \
-            --parameters 'commands=["cd /home/ubuntu/web-app/web-app/ecommerce-microservices", "docker-compose pull nginx", "docker-compose up -d nginx"]' \
-            --region us-east-1
