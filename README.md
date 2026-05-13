@@ -74,6 +74,29 @@ This test verified the absolute saturation point of a local cluster.
 
 ---
 
+## 🔄 GitOps & Continuous Delivery (ArgoCD)
+
+This project implements a **Production-Grade GitOps Workflow**. Local development is automated, but production deployments are strictly managed via a **Dual-Repository Architecture** and **ArgoCD**.
+
+![GitOps Automation Demo](docs/gitops_demo.gif)
+
+### 🏗️ The "Zero-Touch" Deployment Flow
+
+1.  **Code Change:** Developer pushes code to this repository.
+2.  **CI Pipeline (GitHub Actions):** 
+    *   Builds a secure Docker image.
+    *   Pushes it to **Amazon ECR**.
+    *   Automatically updates the image tag in the [GitOps Repository](GITOPS.md).
+3.  **CD Reconciliation (ArgoCD):** 
+    *   ArgoCD detects the manifest change in the GitOps repo.
+    *   Automatically synchronizes the cluster state to match the Git state.
+    *   Performs a **Rolling Update** on the EKS cluster.
+
+> [!TIP]
+> This workflow ensures that the **Git repository is the single source of truth** for the entire infrastructure and application state.
+
+---
+
 ## ⚡ Quick Start (Local — Docker Compose)
 
 > No AWS account needed. Runs fully on your machine in **~2 minutes**.
