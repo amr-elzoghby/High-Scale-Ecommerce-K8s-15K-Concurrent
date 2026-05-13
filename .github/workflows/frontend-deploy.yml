@@ -45,8 +45,8 @@ jobs:
           IMAGE_NAME="3mrlmlops/webapp-frontend"
           NEW_TAG="v${{ github.run_number }}"
           
-          # Update the image tag in the deployment manifest
-          sed -i "s|image: $IMAGE_NAME:.*|image: $IMAGE_NAME:$NEW_TAG|g" $TARGET_FILE
+          # Update the image line - finding the line with 'image:' and replacing it
+          sed -i "s|image: .*|image: $IMAGE_NAME:$NEW_TAG|g" $TARGET_FILE
           
           # Check for changes and push
           if [ -n "$(git status --porcelain)" ]; then
