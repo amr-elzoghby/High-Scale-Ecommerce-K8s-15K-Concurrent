@@ -59,3 +59,9 @@ output "cluster_name" {
 output "cluster_endpoint" {
   value = module.eks.cluster_endpoint
 }
+
+module "falco" {
+  source            = "../../../modules/falco"
+  environment       = "prod"
+  slack_webhook_url = var.slack_webhook_url
+}
