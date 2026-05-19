@@ -272,7 +272,14 @@ Traffic Spike → CPU > 60% on Pod
 | 🎭 **IRSA** | Each pod gets minimal AWS permissions via IAM Roles for Service Accounts |
 | 🛡️ **IMDSv2** | Enforced on all EC2 nodes — prevents SSRF-based metadata attacks |
 | 👤 **Non-root Containers** | All services run as `USER node` — no privilege escalation |
-| 🔍 **ECR Scan-on-Push** | Images scanned for CVEs on every push |
+| 🛡️ **Trivy Image Scanning** | Automated vulnerability scanning in CI/CD pipelines, strictly blocking deployments with `CRITICAL` severity CVEs |
+| 🐕 **Falco Runtime Security** | Real-time threat detection (eBPF) monitoring container syscalls, integrated with **Falcosidekick** for automated Slack alerts |
+
+### 🚨 Real-Time Threat Detection (Falco + Slack)
+
+The EKS cluster is actively protected by **Falco**, which monitors system calls at the kernel level using eBPF. If anomalous behavior is detected (e.g., spawning a shell in a container or reading sensitive files like `/etc/shadow`), **Falcosidekick** immediately forwards the alert to a dedicated security Slack channel.
+
+![Falco Slack Alert](docs/images/falco-slack-alert.png)
 
 ---
 
