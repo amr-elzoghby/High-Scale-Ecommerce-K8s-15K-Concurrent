@@ -22,9 +22,14 @@ spec:
           image: 644981759771.dkr.ecr.us-east-1.amazonaws.com/order-service:latest
           ports:
             - containerPort: 3004
+              name: http
+            - containerPort: 50052
+              name: grpc
           env:
             - name: PORT
               value: "3004"
+            - name: GRPC_PORT
+              value: "50052"
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
@@ -59,8 +64,12 @@ spec:
   selector:
     app: order-service
   ports:
-    - port: 3004
+    - name: http
+      port: 3004
       targetPort: 3004
+    - name: grpc
+      port: 50052
+      targetPort: 50052
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

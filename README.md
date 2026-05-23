@@ -219,6 +219,7 @@ terraform init && terraform apply
 | Layer | Technology | AWS Service |
 |:---|:---|:---|
 | **Backend** | Node.js (Express) & Python (FastAPI) | EKS (Kubernetes 1.30) |
+| **Service Communication** | REST (HTTP/JSON) for cart & catalog · gRPC (Protobuf) for payment & order | Internal Kubernetes DNS |
 | **Databases** | Polyglot: MongoDB, PostgreSQL (Numeric, CheckConstraint), Redis (7-day TTL) | StatefulSets + EBS volumes |
 | **Ingress** | Nginx | Application Load Balancer |
 | **IaC** | Terraform 1.5+ | S3 State + DynamoDB Lock |
@@ -270,6 +271,38 @@ Every microservice in the cluster is configured with strict **Kubernetes Probes*
   - **Payments Safety:** The Payment service uses PostgreSQL with explicit **ACID transactions**, `Numeric(10, 2)` column precision for precise decimals, and custom DB-level `CheckConstraint` rules to enforce `amount > 0` and secure financial logs.
   - **Cart Expiration:** Customer shopping carts are cached inside Redis with a dynamic **7-day Time-To-Live (TTL)**. Every user action renews the lease, preventing memory bloat while preserving active sessions.
 
+### ⚡ gRPC Communication Architecture (Dual-Protocol Design)
+The platform uses a **Dual-Protocol** strategy — each protocol serves a different purpose based on performance requirements:
+
+```
+[ Browser / Frontend ]
+        │
+        │  REST (HTTP/JSON)
+        ▼
+   AWS ALB → Nginx Ingress
+        │
+   ┌────┴────────────────────────────────────────────────┐
+   │                                                     │
+   ▼  REST only                  ▼  REST (browser)      │
+cart-service (3003)         payment-service (3005)      │
+catalog-service (3002)      order-service   (3004)      │
+                                   │                    │
+                         ┌─────────┘                    │
+                         │  gRPC (Protobuf)              │
+                         ▼  Internal Cluster Only        │
+                   payment-service (:50051)             │
+                   order-service   (:50052)             │
+```
+
+| Service | Protocol | Port | Used By |
+|:---|:---|:---:|:---|
+| **cart-service** | REST only | `3003` | Browser |
+| **catalog-service** | REST only | `3002` | Browser |
+| **payment-service** | REST + **gRPC** | `3005` + `50051` | Browser + Internal services |
+| **order-service** | REST + **gRPC** | `3004` + `50052` | Browser + Internal services |
+
+> **Why gRPC for Payment & Order?** These two services handle the most critical and latency-sensitive flows (checkout, payment processing). gRPC uses **Protocol Buffers (binary)** which is ~7x faster to serialize than JSON and enforces strict typed contracts via `.proto` schema files, making it ideal for **high-throughput, low-latency inter-service communication**.
+
 ---
 
 ## 🔒 Security Highlights
@@ -300,11 +333,15 @@ The EKS cluster is actively protected by **Falco**, which monitors system calls 
 └── web-app/
     ├── ecommerce-microservices/
     │   ├── services/           # 5 Polyglot microservices
-    │   │   ├── user-service/   # Auth, JWT (Node.js)      (Port 3001)
-    │   │   ├── catalog-service/# Products (Node.js)      (Port 3002)
-    │   │   ├── cart-service/   # Cart + Redis (Node.js)   (Port 3003)
-    │   │   ├── order-service/  # Orders (Node.js)         (Port 3004)
-    │   │   └── payment-service/# Payments (Python FastAPI)(Port 3005)
+    │   │   ├── user-service/   # Auth, JWT (Node.js)             (REST :3001)
+    │   │   ├── catalog-service/# Products (Node.js)              (REST :3002)
+    │   │   ├── cart-service/   # Cart + Redis (Node.js)           (REST :3003)
+    │   │   ├── order-service/  # Orders (Node.js)       (REST :3004 + gRPC :50052)
+    │   │   │   ├── order.proto     # gRPC contract definition
+    │   │   │   └── grpcServer.js   # gRPC server implementation
+    │   │   └── payment-service/# Payments (Python FastAPI)(REST :3005 + gRPC :50051)
+    │   │       ├── payment.proto   # gRPC contract definition
+    │   │       └── grpc_server.py  # gRPC server implementation
     │   ├── nginx/              # Reverse proxy config
     │   └── docker-compose.yml  # Local development
     ├── k8s/

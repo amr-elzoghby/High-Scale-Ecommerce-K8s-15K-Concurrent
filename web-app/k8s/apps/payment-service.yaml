@@ -22,9 +22,14 @@ spec:
           image: 644981759771.dkr.ecr.us-east-1.amazonaws.com/payment-service:latest
           ports:
             - containerPort: 3005
+              name: http
+            - containerPort: 50051
+              name: grpc
           env:
             - name: PORT
               value: "3005"
+            - name: GRPC_PORT
+              value: "50051"
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -59,8 +64,12 @@ spec:
   selector:
     app: payment-service
   ports:
-    - port: 3005
+    - name: http
+      port: 3005
       targetPort: 3005
+    - name: grpc
+      port: 50051
+      targetPort: 50051
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

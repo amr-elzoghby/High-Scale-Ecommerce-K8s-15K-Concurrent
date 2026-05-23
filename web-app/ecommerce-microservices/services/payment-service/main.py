@@ -1,9 +1,11 @@
 import os
+import threading
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from database import engine, Base
 from routes.payment import router as payment_router
+from grpc_server import serve
 
 load_dotenv()
 
@@ -15,6 +17,13 @@ app = FastAPI(
     description="Handles payment processing for the e-commerce platform",
     version="1.0.0",
 )
+
+@app.on_event("startup")
+def startup_event():
+    # Run the gRPC server in a background daemon thread
+    grpc_port = int(os.getenv("GRPC_PORT", 50051))
+    grpc_thread = threading.Thread(target=serve, args=(grpc_port,), daemon=True)
+    grpc_thread.start()
 
 # CORS
 app.add_middleware(

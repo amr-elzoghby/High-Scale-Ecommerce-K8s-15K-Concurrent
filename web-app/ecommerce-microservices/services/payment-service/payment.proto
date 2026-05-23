@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package payment;
+
+service PaymentService {
+  rpc ProcessPayment (PaymentRequest) returns (PaymentResponse);
+}
+
+message PaymentRequest {
+  string user_id = 1;
+  double amount = 2;
+  string card_number = 3;
+  string card_expiry = 4;
+  string card_cvv = 5;
+}
+
+message PaymentResponse {
+  string payment_id = 1;
+  string status = 2;
+  double amount = 3;
+  string message = 4;
+}
