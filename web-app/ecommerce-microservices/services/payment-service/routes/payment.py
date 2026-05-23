@@ -28,8 +28,8 @@ class PaymentRequest(BaseModel):
     @field_validator("amount")
     @classmethod
     def validate_amount(cls, v: float) -> float:
-        if v < 0:
-            raise ValueError("Amount must be 0 or greater")
+        if v <= 0:
+            raise ValueError("Amount must be greater than 0")
         return v
 
 

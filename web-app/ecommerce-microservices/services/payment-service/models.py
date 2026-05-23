@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Float, DateTime, Enum as SAEnum
+from sqlalchemy import Column, String, Numeric, DateTime, Enum as SAEnum, CheckConstraint
 from database import Base
 import enum
 
@@ -17,9 +17,13 @@ class Payment(Base):
 
     id         = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id    = Column(String, nullable=False, index=True)
-    amount     = Column(Float, nullable=False)
+    amount     = Column(Numeric(10, 2), nullable=False)
     # Store only last 4 digits for security
     card_last4 = Column(String(4), nullable=False)
     status     = Column(SAEnum(PaymentStatus), default=PaymentStatus.PENDING, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        CheckConstraint('amount > 0', name='check_payment_amount_positive'),
+    )
