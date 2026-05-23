@@ -8,7 +8,7 @@
 [![Terraform](https://img.shields.io/badge/Terraform-1.5+-7B42BC?logo=terraform&logoColor=white)](https://terraform.io)
 [![AWS EKS](https://img.shields.io/badge/AWS-EKS-FF9900?logo=amazonaws&logoColor=white)](https://aws.amazon.com/eks/)
 
-**Production-grade e-commerce platform on AWS EKS — 5 Node.js microservices, automated scaling, full observability.**  
+**Production-grade e-commerce platform on AWS EKS — 5 polyglot microservices (Node.js & Python FastAPI), automated scaling, full observability.**  
 Engineered to handle **15,000+ concurrent users (100,000+ daily)** via HPA + Cluster Autoscaler.
 
 </div>
@@ -218,8 +218,8 @@ terraform init && terraform apply
 
 | Layer | Technology | AWS Service |
 |:---|:---|:---|
-| **Backend** | Node.js + Express | EKS (Kubernetes 1.30) |
-| **Databases** | MongoDB, PostgreSQL, Redis | StatefulSets + EBS volumes |
+| **Backend** | Node.js (Express) & Python (FastAPI) | EKS (Kubernetes 1.30) |
+| **Databases** | Polyglot: MongoDB, PostgreSQL (Numeric, CheckConstraint), Redis (7-day TTL) | StatefulSets + EBS volumes |
 | **Ingress** | Nginx | Application Load Balancer |
 | **IaC** | Terraform 1.5+ | S3 State + DynamoDB Lock |
 | **CI/CD** | GitHub Actions + OIDC | ECR (Docker Registry) |
@@ -249,7 +249,7 @@ kubectl port-forward svc/grafana 3000:3000 -n monitoring
 
 ---
 
-## ⚙️ Auto-Scaling Architecture
+## ⚙️ Auto-Scaling & Resilience Architecture
 
 ```
 Traffic Spike → CPU > 60% on Pod
@@ -260,6 +260,15 @@ Traffic Spike → CPU > 60% on Pod
 ```
 
 **Scale-in:** When traffic drops, HPA reduces replicas → Cluster Autoscaler removes idle nodes → cost drops automatically.
+
+### 🛠️ Self-Healing & High Availability (Resilience)
+Every microservice in the cluster is configured with strict **Kubernetes Probes** to ensure zero-downtime operations and maximum uptime:
+
+- **Readiness Probes (`httpGet`):** Prevents routing web traffic to pods that are not fully initialized or still connecting to databases. This guarantees **zero-downtime rolling deployments** and eliminates `502 Bad Gateway` errors.
+- **Liveness Probes (`httpGet`):** Constantly monitors container health. If a microservice freezes or hits a deadlock, Kubernetes detects the failure within seconds, terminates the dead container, and spawns a healthy replica automatically (**Self-Healing**).
+- **Data Constraints & Expiration:**
+  - **Payments Safety:** The Payment service uses PostgreSQL with explicit **ACID transactions**, `Numeric(10, 2)` column precision for precise decimals, and custom DB-level `CheckConstraint` rules to enforce `amount > 0` and secure financial logs.
+  - **Cart Expiration:** Customer shopping carts are cached inside Redis with a dynamic **7-day Time-To-Live (TTL)**. Every user action renews the lease, preventing memory bloat while preserving active sessions.
 
 ---
 
@@ -290,12 +299,12 @@ The EKS cluster is actively protected by **Falco**, which monitors system calls 
 ├── .github/workflows/          # CI/CD (OIDC Deploy + PR Preview + Cleanup)
 └── web-app/
     ├── ecommerce-microservices/
-    │   ├── services/           # 5 Node.js microservices
-    │   │   ├── user-service/   # Auth, JWT           (Port 3001)
-    │   │   ├── catalog-service/# Products            (Port 3002)
-    │   │   ├── cart-service/   # Cart + Redis        (Port 3003)
-    │   │   ├── order-service/  # Orders              (Port 3004)
-    │   │   └── payment-service/# Payments            (Port 3005)
+    │   ├── services/           # 5 Polyglot microservices
+    │   │   ├── user-service/   # Auth, JWT (Node.js)      (Port 3001)
+    │   │   ├── catalog-service/# Products (Node.js)      (Port 3002)
+    │   │   ├── cart-service/   # Cart + Redis (Node.js)   (Port 3003)
+    │   │   ├── order-service/  # Orders (Node.js)         (Port 3004)
+    │   │   └── payment-service/# Payments (Python FastAPI)(Port 3005)
     │   ├── nginx/              # Reverse proxy config
     │   └── docker-compose.yml  # Local development
     ├── k8s/
