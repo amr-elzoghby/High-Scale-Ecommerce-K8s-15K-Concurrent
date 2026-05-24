@@ -1,10 +1,11 @@
 const express = require('express');
 const Order   = require('../models/Order');
+const authMiddleware = require('../authMiddleware');
 
 const router = express.Router();
 
 // ── POST /api/orders  (create order) ─────────────────────────────────────────
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
     const { userId, items, totalAmount, shippingAddress, paymentId } = req.body;
 
@@ -20,7 +21,7 @@ router.post('/', async (req, res) => {
 });
 
 // ── GET /api/orders/user/:userId  (get orders for a user) ────────────────────
-router.get('/user/:userId', async (req, res) => {
+router.get('/user/:userId', authMiddleware, async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
     return res.json(orders);

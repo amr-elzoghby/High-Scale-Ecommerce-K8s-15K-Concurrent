@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
+const cookieParser = require('cookie-parser');
 const connectDB = require('./db');
 const userRoutes = require('./routes/users');
 
@@ -11,8 +12,9 @@ const PORT = process.env.PORT || 3001;
 connectDB();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/users', userRoutes);
@@ -24,3 +26,4 @@ app.get('/health', (_req, res) => res.json({ service: 'user-service', status: 'o
 app.listen(PORT, () => {
   console.log(`[User Service] Running on http://localhost:${PORT}`);
 });
+

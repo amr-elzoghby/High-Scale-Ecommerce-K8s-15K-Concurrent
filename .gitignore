@@ -4,6 +4,14 @@
 # ── Kubernetes Secrets (never commit real passwords) ──
 web-app/k8s/secrets/
 
+# ── RSA Key Files (NEVER commit private keys!) ──
+*.pem
+web-app/ecommerce-microservices/keys/
+
+# ── gRPC generated proto files ──
+*_pb2.py
+*_pb2_grpc.py
+
 # ── Node ──
 node_modules/
 npm-debug.log*

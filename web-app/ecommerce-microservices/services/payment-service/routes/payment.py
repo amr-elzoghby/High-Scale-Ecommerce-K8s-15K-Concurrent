@@ -5,6 +5,7 @@ from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Payment, PaymentStatus
+from auth import verify_token
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
@@ -45,7 +46,7 @@ class PaymentResponse(BaseModel):
 
 # ── POST /api/payments/process ────────────────────────────────────────────────
 @router.post("/process", response_model=PaymentResponse)
-def process_payment(payload: PaymentRequest, db: Session = Depends(get_db)):
+def process_payment(payload: PaymentRequest, db: Session = Depends(get_db), _: dict = Depends(verify_token)):
     """
     Simulates payment processing.
     In production: integrate with Stripe, PayPal, etc.

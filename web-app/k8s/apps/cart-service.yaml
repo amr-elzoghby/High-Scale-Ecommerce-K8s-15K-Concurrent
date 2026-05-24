@@ -32,6 +32,11 @@ spec:
                   key: MONGO_URI
             - name: REDIS_URL
               value: "redis://redis.ecommerce-data:6379"
+            - name: JWT_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_PUBLIC_KEY
           resources:
             requests:
               cpu: "250m"

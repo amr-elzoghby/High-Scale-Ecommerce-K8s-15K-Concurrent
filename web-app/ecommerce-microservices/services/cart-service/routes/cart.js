@@ -1,5 +1,6 @@
 const express = require('express');
 const { getRedisClient } = require('../db');
+const authMiddleware = require('../authMiddleware');
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ router.get('/:userId', async (req, res) => {
 });
 
 // ── POST /api/cart/:userId/add ────────────────────────────────────────────────
-router.post('/:userId/add', async (req, res) => {
+router.post('/:userId/add', authMiddleware, async (req, res) => {
   try {
     const { productId, name, price, quantity = 1 } = req.body;
 
@@ -54,7 +55,7 @@ router.post('/:userId/add', async (req, res) => {
 });
 
 // ── PUT /api/cart/:userId/update ──────────────────────────────────────────────
-router.put('/:userId/update', async (req, res) => {
+router.put('/:userId/update', authMiddleware, async (req, res) => {
   try {
     const { productId, quantity } = req.body;
     if (!productId || quantity == null) {
@@ -75,7 +76,7 @@ router.put('/:userId/update', async (req, res) => {
 });
 
 // ── DELETE /api/cart/:userId/remove/:productId ────────────────────────────────
-router.delete('/:userId/remove/:productId', async (req, res) => {
+router.delete('/:userId/remove/:productId', authMiddleware, async (req, res) => {
   try {
     const cart = await getCart(req.params.userId);
     cart.items = cart.items.filter(i => i.productId !== req.params.productId);
@@ -87,7 +88,7 @@ router.delete('/:userId/remove/:productId', async (req, res) => {
 });
 
 // ── DELETE /api/cart/:userId/clear ────────────────────────────────────────────
-router.delete('/:userId/clear', async (req, res) => {
+router.delete('/:userId/clear', authMiddleware, async (req, res) => {
   try {
     const client = getRedisClient();
     await client.del(`cart:${req.params.userId}`);
