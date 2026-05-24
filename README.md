@@ -363,18 +363,50 @@ The EKS cluster is actively protected by **Falco**, which monitors system calls 
 
 ---
 
-## 🧹 Teardown (Avoid AWS Charges)
+## 🚀 Quickstart (One-Click Deploy)
 
-> ⚠️ Always destroy in reverse order — EKS first, then network.
+This project includes a root `Makefile` to fully automate both Local Development (via k3d) and Production Provisioning (AWS EKS via Terraform).
+
+### Option A: Local Development (k3d)
+Perfect for testing without incurring AWS charges. Requires [k3d](https://k3d.io/) and Docker.
 
 ```bash
-# 1. Delete EKS cluster (most expensive resource)
-cd web-app/environments/prod/eks
-terraform destroy -auto-approve
+# Create local cluster, generate keys, and deploy everything
+make local-up
 
-# 2. Delete Network (VPC, subnets, endpoints)
-cd ../network
-terraform destroy -auto-approve
+# Tear down local cluster
+make local-down
+```
+
+### Option B: Production (AWS EKS)
+Requires AWS credentials, Terraform, and kubectl.
+
+```bash
+# Deploy everything (Generates RSA keys, provisions Terraform infra, and deploys K8s apps)
+make up
+
+# Destroy everything safely to avoid charges
+make down
+```
+
+---
+
+## 🛠️ Makefile Commands Reference
+
+To see all available individual commands:
+```bash
+make help
+```
+
+---
+
+## 🧹 Teardown (Avoid AWS Charges)
+
+> ⚠️ Always destroy resources when you are done to prevent unexpected AWS costs.
+
+```bash
+# Safely clean up K8s resources and destroy all Terraform infrastructure in reverse order
+make down
 ```
 
 ---
