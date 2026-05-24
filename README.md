@@ -220,6 +220,7 @@ terraform init && terraform apply
 |:---|:---|:---|
 | **Backend** | Node.js (Express) & Python (FastAPI) | EKS (Kubernetes 1.30) |
 | **Service Communication** | REST (HTTP/JSON) for cart & catalog · gRPC (Protobuf) for payment & order | Internal Kubernetes DNS |
+| **Authentication** | JWT RS256 (Asymmetric) · Access Token 15m · httpOnly Refresh Token 7d | Kubernetes Secrets (RSA Key Pair) |
 | **Databases** | Polyglot: MongoDB, PostgreSQL (Numeric, CheckConstraint), Redis (7-day TTL) | StatefulSets + EBS volumes |
 | **Ingress** | Nginx | Application Load Balancer |
 | **IaC** | Terraform 1.5+ | S3 State + DynamoDB Lock |
@@ -314,6 +315,9 @@ catalog-service (3002)      order-service   (3004)      │
 | 🎭 **IRSA** | Each pod gets minimal AWS permissions via IAM Roles for Service Accounts |
 | 🛡️ **IMDSv2** | Enforced on all EC2 nodes — prevents SSRF-based metadata attacks |
 | 👤 **Non-root Containers** | All services run as `USER node` — no privilege escalation |
+| 🔏 **JWT RS256 (Asymmetric)** | Tokens signed with RSA-4096 **private key** (user-service only). All other services verify using the **public key** only — a compromised service cannot forge tokens |
+| 🍪 **Secure Refresh Tokens** | Refresh tokens stored in `httpOnly + Secure + SameSite=Strict` cookies — immune to XSS attacks. Short-lived Access Tokens (15 min) with 7-day rotation |
+| 🚦 **Stateless Auth Middleware** | Every protected route in cart, order, and payment services performs RS256 JWT verification in-memory — **zero database calls** per request |
 | 🛡️ **Trivy Image Scanning** | Automated vulnerability scanning in CI/CD pipelines, strictly blocking deployments with `CRITICAL` severity CVEs |
 | 🐕 **Falco Runtime Security** | Real-time threat detection (eBPF) monitoring container syscalls, integrated with **Falcosidekick** for automated Slack alerts |
 
