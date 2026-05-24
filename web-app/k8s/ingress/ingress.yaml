@@ -4,11 +4,12 @@ metadata:
   name: ecommerce-ingress
   namespace: ecommerce-apps
   annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/limit-rps: "20"
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "5"
 spec:
-  ingressClassName: alb
+  ingressClassName: nginx
   rules:
   - http:
       paths:
