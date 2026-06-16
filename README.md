@@ -320,6 +320,9 @@ catalog-service (3002)      order-service   (3004)      │
 | 🚦 **Stateless Auth Middleware** | Every protected route in cart, order, and payment services performs RS256 JWT verification in-memory — **zero database calls** per request |
 | 🛡️ **Trivy Image Scanning** | Automated vulnerability scanning in CI/CD pipelines, strictly blocking deployments with `CRITICAL` severity CVEs |
 | 🐕 **Falco Runtime Security** | Real-time threat detection (eBPF) monitoring container syscalls, integrated with **Falcosidekick** for automated Slack alerts |
+| 🔒 **Zero-Trust Networking** | Kubernetes NetworkPolicies enforce Default-Deny, restricting pod-to-pod and database access strictly to required paths |
+| 🔒 **Auto TLS/HTTPS** | Let's Encrypt certificates automatically provisioned and rotated by cert-manager with forced HTTPS redirection & HSTS headers |
+| 🤫 **Gitignored Secrets** | Local setups pull credentials dynamically from `.env` files, eliminating hardcoded plaintext secrets in source control |
 
 ### 🚨 Real-Time Threat Detection (Falco + Slack)
 
@@ -352,6 +355,8 @@ The EKS cluster is actively protected by **Falco**, which monitors system calls 
     │   ├── apps/               # Deployments, Services, HPAs
     │   ├── databases/          # StatefulSets (Mongo, Postgres, Redis)
     │   ├── ingress/            # Nginx Ingress rules
+    │   ├── cert-manager/       # Let's Encrypt ClusterIssuers
+    │   ├── network-policies/   # Zero-Trust Default Deny & Allow Rules
     │   └── monitoring/         # ServiceMonitors for Prometheus
     ├── modules/
     │   ├── network/            # VPC, Subnets, Security Groups, VPC Endpoints
