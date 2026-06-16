@@ -52,6 +52,10 @@ deploy: ## Deploy Databases, Microservices, and Ingress to Kubernetes
 	kubectl apply -f web-app/k8s/apps/
 	@echo "$(YELLOW)Deploying Ingress Rules...$(NC)"
 	kubectl apply -f web-app/k8s/ingress/
+	@echo "$(YELLOW)Deploying Network Policies (Default Deny & Allow Rules)...$(NC)"
+	kubectl apply -f web-app/k8s/network-policies/
+	@echo "$(YELLOW)Deploying TLS Certificate Issuers...$(NC)"
+	kubectl apply -f web-app/k8s/cert-manager/
 	@echo "$(YELLOW)Deploying Monitoring Stack...$(NC)"
 	kubectl apply -f web-app/k8s/monitoring/
 	@echo "$(GREEN)Application deployment complete!$(NC)"

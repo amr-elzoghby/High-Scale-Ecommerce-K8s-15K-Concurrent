@@ -1,0 +1,30 @@
+# Allow Ingress Controller to access microservices
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-apps
+  namespace: ecommerce-apps
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [user-service, catalog-service, cart-service, order-service, payment-service]
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 3001 # user
+    - protocol: TCP
+      port: 3002 # catalog
+    - protocol: TCP
+      port: 3003 # cart
+    - protocol: TCP
+      port: 3004 # order
+    - protocol: TCP
+      port: 3005 # payment

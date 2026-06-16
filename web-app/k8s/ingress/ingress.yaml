@@ -4,14 +4,25 @@ metadata:
   name: ecommerce-ingress
   namespace: ecommerce-apps
   annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/limit-rps: "20"
     nginx.ingress.kubernetes.io/limit-connections: "10"
     nginx.ingress.kubernetes.io/limit-burst-multiplier: "5"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-Frame-Options "DENY" always;
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - shopscale.example.com
+      secretName: shopscale-tls
   rules:
-  - http:
+  - host: shopscale.example.com
+    http:
       paths:
       - path: /api/users
         pathType: Prefix

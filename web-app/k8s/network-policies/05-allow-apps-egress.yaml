@@ -1,0 +1,31 @@
+# Allow Egress from Apps to Data namespace databases
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-apps-egress-to-db
+  namespace: ecommerce-apps
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [user-service, catalog-service, cart-service, order-service, payment-service]
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: ecommerce-data
+      podSelector:
+        matchExpressions:
+          - key: app
+            operator: In
+            values: [mongodb, postgres, redis]
+    ports:
+    - protocol: TCP
+      port: 27017
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 6379

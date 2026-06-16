@@ -61,3 +61,23 @@ resource "helm_release" "loki" {
     aws_eks_addon.ebs_csi_driver
   ]
 }
+
+# ─── cert-manager (Automatic TLS Certificates) ──────────────────────────────
+resource "helm_release" "cert_manager" {
+  name             = "cert-manager"
+  repository       = "https://charts.jetstack.io"
+  chart            = "cert-manager"
+  version          = "v1.16.3"
+  namespace        = "cert-manager"
+  create_namespace = true
+
+  set {
+    name  = "crds.enabled"
+    value = "true"
+  }
+
+  depends_on = [
+    aws_eks_node_group.workers,
+    aws_eks_node_group.workers_spot,
+  ]
+}
