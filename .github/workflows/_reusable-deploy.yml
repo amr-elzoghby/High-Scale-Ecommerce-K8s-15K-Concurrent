@@ -1,0 +1,100 @@
+# =============================================================================
+# Reusable Workflow — Build, Scan & Deploy any service to AWS EKS (GitOps)
+# Called by individual per-service deploy workflows.
+# =============================================================================
+name: "_Reusable: Build & Deploy to EKS"
+
+on:
+  workflow_call:
+    inputs:
+      service-name:
+        description: "Name of the service (e.g. cart-service, frontend)"
+        required: true
+        type: string
+      service-path:
+        description: "Path to the service source code relative to repo root"
+        required: true
+        type: string
+      ecr-repository:
+        description: "ECR repository name (e.g. prod-cart-service)"
+        required: true
+        type: string
+      gitops-app-path:
+        description: "Path inside the GitOps repo to the deployment manifest (e.g. apps/cart-service/deployment.yaml)"
+        required: true
+        type: string
+    secrets:
+      GITOPS_TOKEN:
+        required: true
+
+jobs:
+  build-scan-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::644981759771:role/GitHubActionRole
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ inputs.ecr-repository }}
+          IMAGE_TAG: v${{ github.run_number }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./${{ inputs.service-path }}
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository }}:v${{ github.run_number }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'
+
+      - name: Push Image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ inputs.ecr-repository }}
+          IMAGE_TAG: v${{ github.run_number }}
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Update GitOps Repository
+        env:
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git clone https://${GITOPS_TOKEN}@github.com/amr-elzoghby/web-app-gitops.git gitops-repo
+          cd gitops-repo
+
+          TARGET_FILE="${{ inputs.gitops-app-path }}"
+          ECR_IMAGE="${ECR_REGISTRY}/${{ inputs.ecr-repository }}"
+          NEW_TAG="v${{ github.run_number }}"
+
+          sed -i "s|image: .*|image: $ECR_IMAGE:$NEW_TAG|g" $TARGET_FILE
+
+          if [ -n "$(git status --porcelain)" ]; then
+            git add $TARGET_FILE
+            git commit -m "chore(${{ inputs.service-name }}): deploy $NEW_TAG to EKS [skip ci]"
+            git push
+          else
+            echo "No changes to commit"
+          fi

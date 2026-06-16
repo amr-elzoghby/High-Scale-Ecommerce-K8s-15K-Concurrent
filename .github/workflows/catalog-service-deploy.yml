@@ -10,74 +10,12 @@ on:
       - "web-app/ecommerce-microservices/services/catalog-service/**"
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::644981759771:role/GitHubActionRole
-          aws-region: us-east-1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build Image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.registry }}
-          ECR_REPOSITORY: prod-catalog-service
-          IMAGE_TAG: v${{ github.run_number }}
-        run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./web-app/ecommerce-microservices/services/catalog-service
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: '${{ steps.login-ecr.registry }}/prod-catalog-service:v${{ github.run_number }}'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL'
-
-      - name: Push Image to Amazon ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.registry }}
-          ECR_REPOSITORY: prod-catalog-service
-          IMAGE_TAG: v${{ github.run_number }}
-        run: |
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-      - name: Update GitOps Repository
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Clone the GitOps repo
-          git clone https://${{ secrets.GITOPS_TOKEN }}@github.com/amr-elzoghby/web-app-gitops.git gitops-repo
-          cd gitops-repo
-          
-          # Target configuration
-          TARGET_FILE="apps/catalog-service/deployment.yaml"
-          ECR_IMAGE="${{ steps.login-ecr.registry }}/prod-catalog-service"
-          NEW_TAG="v${{ github.run_number }}"
-          
-          # Update the image line
-          sed -i "s|image: .*|image: $ECR_IMAGE:$NEW_TAG|g" $TARGET_FILE
-          
-          # Check for changes and push
-          if [ -n "$(git status --porcelain)" ]; then
-            git add $TARGET_FILE
-            git commit -m "chore(catalog): deploy $NEW_TAG to EKS [skip ci]"
-            git push
-          else
-            echo "No changes to commit"
-          fi
+  deploy:
+    uses: ./.github/workflows/_reusable-deploy.yml
+    with:
+      service-name: catalog-service
+      service-path: web-app/ecommerce-microservices/services/catalog-service
+      ecr-repository: prod-catalog-service
+      gitops-app-path: apps/catalog-service/deployment.yaml
+    secrets:
+      GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}

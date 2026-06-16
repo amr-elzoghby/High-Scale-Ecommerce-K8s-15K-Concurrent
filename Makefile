@@ -33,11 +33,13 @@ setup-cluster: ## Setup K8s Cluster (Nginx Ingress + App Secrets)
 	helm upgrade --install ingress-nginx ingress-nginx \
 		--repo https://kubernetes.github.io/ingress-nginx \
 		--namespace ingress-nginx --create-namespace
-	@echo "$(YELLOW)Injecting Kubernetes Secrets...$(NC)"
+	@echo "$(YELLOW)Injecting Kubernetes Secrets from .env file...$(NC)"
+	@if [ ! -f .env ]; then echo "$(YELLOW)⚠ .env file not found! Run: cp .env.example .env$(NC)" && exit 1; fi
 	kubectl create namespace ecommerce-apps --dry-run=client -o yaml | kubectl apply -f -
+	@set -a && . ./.env && set +a && \
 	kubectl create secret generic app-secrets \
-		--from-literal=MONGO_URI="mongodb://mongo-0.mongo.ecommerce-data.svc.cluster.local:27017/ecommerce" \
-		--from-literal=DATABASE_URL="postgresql://postgres:postgres@postgres-0.postgres.ecommerce-data.svc.cluster.local:5432/ecommerce" \
+		--from-literal=MONGO_URI="$${MONGO_URI}" \
+		--from-literal=DATABASE_URL="postgresql://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@postgres-0.postgres.ecommerce-data.svc.cluster.local:5432/$${POSTGRES_DB}" \
 		--from-literal=JWT_PRIVATE_KEY="$$(cat web-app/ecommerce-microservices/keys/private.pem)" \
 		--from-literal=JWT_PUBLIC_KEY="$$(cat web-app/ecommerce-microservices/keys/public.pem)" \
 		-n ecommerce-apps --dry-run=client -o yaml | kubectl apply -f -
