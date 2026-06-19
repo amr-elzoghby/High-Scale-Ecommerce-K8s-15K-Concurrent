@@ -4,13 +4,13 @@
 
 # High-Scale E-Commerce on Kubernetes
 
-[![CI/CD](https://github.com/amr-elzoghby/High-Scale-Ecommerce-K8s-15K-Concurrent/actions/workflows/deploy.yml/badge.svg)](https://github.com/amr-elzoghby/High-Scale-Ecommerce-K8s-15K-Concurrent/actions)
+[![CI/CD](https://github.com/amr-elzoghby/High-Scale-Ecommerce-K8s-15K-Concurrent/actions/workflows/user-service-deploy.yml/badge.svg)](https://github.com/amr-elzoghby/High-Scale-Ecommerce-K8s-15K-Concurrent/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-1.30-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io)
 [![Terraform](https://img.shields.io/badge/Terraform-1.5+-7B42BC?logo=terraform&logoColor=white)](https://terraform.io)
 [![AWS EKS](https://img.shields.io/badge/AWS-EKS-FF9900?logo=amazonaws&logoColor=white)](https://aws.amazon.com/eks/)
 
-Production-grade e-commerce platform running **5 polyglot microservices** (Node.js + Python FastAPI) on **AWS EKS**.<br/>
+Production-grade e-commerce platform running **5 polyglot microservices** (Node.js + Python FastAPI) with a **static frontend**, deployed on **AWS EKS**.<br/>
 Engineered to handle **15,000+ concurrent users** via HPA + Cluster Autoscaler.
 
 [Quick Start](#-quick-start) · [Architecture](#-architecture) · [Deploy to AWS](#-deploy-to-aws-eks) · [Teardown](#-teardown)
@@ -131,15 +131,23 @@ aws secretsmanager create-secret \
   --region us-east-1
 ```
 
-### Step 2 — Deploy Infrastructure
+### Step 2 — Deploy Infrastructure (4 layers, in order)
 
 ```bash
-# Network layer (VPC, Subnets, VPC Endpoints)
+# 1. Network layer (VPC, Subnets, VPC Endpoints)
 cd web-app/environments/prod/network
 terraform init && terraform apply
 
-# EKS Cluster + Monitoring (~20 min)
+# 2. Storage layer (S3 buckets)
+cd ../storage
+terraform init && terraform apply
+
+# 3. EKS Cluster + Monitoring (~20 min)
 cd ../eks
+terraform init && terraform apply
+
+# 4. Compute layer (Node Groups, ALB, ECR, Lambda)
+cd ../compute
 terraform init && terraform apply
 ```
 
@@ -228,7 +236,7 @@ kubectl port-forward svc/grafana 3000:3000 -n monitoring
 ## ⚙️ Auto-Scaling & Resilience
 
 ```
-Traffic Spike → CPU > 60% → HPA scales pods (2 → 20) → Cluster Autoscaler adds Spot nodes → Traffic served ✅
+Traffic Spike → CPU > 60–80% → HPA scales pods (2 → 20) → Cluster Autoscaler adds Spot nodes → Traffic served ✅
 Traffic Drop  → HPA reduces replicas → Autoscaler removes idle nodes → Cost drops automatically
 ```
 
@@ -276,6 +284,7 @@ Traffic Drop  → HPA reduces replicas → Autoscaler removes idle nodes → Cos
 .
 ├── .github/workflows/            # CI/CD (OIDC Deploy + PR Preview + Cleanup)
 └── web-app/
+    ├── frontend/                 # Static storefront (HTML/CSS/JS)
     ├── ecommerce-microservices/
     │   ├── services/
     │   │   ├── user-service/     # Auth + JWT (Node.js)              REST :3001
@@ -291,13 +300,23 @@ Traffic Drop  → HPA reduces replicas → Autoscaler removes idle nodes → Cos
     │   ├── ingress/              # Nginx Ingress rules
     │   ├── cert-manager/         # Let's Encrypt ClusterIssuers
     │   ├── network-policies/     # Zero-Trust rules
+    │   ├── namespaces/           # Namespace definitions
+    │   ├── secrets/              # Secret manifests
     │   └── monitoring/           # ServiceMonitors for Prometheus
     ├── modules/
     │   ├── network/              # VPC, Subnets, SGs, VPC Endpoints
-    │   └── eks/                  # EKS Cluster, Node Groups, Helm releases
+    │   ├── eks/                  # EKS Cluster, Node Groups, Helm releases
+    │   ├── compute/              # Launch Template, ASG, ALB, ECR, Lambda
+    │   ├── storage/              # S3 buckets
+    │   ├── falco/                # Runtime security (eBPF)
+    │   └── backend-setup/        # Terraform backend bootstrap
     └── environments/
-        ├── prod/                 # Production Terraform configs
-        └── dev/                  # Development Terraform configs
+        ├── prod/
+        │   ├── network/          # VPC + Subnets
+        │   ├── storage/          # S3
+        │   ├── eks/              # EKS Cluster
+        │   └── compute/          # Node Groups + ALB
+        └── dev/
 ```
 
 ---
