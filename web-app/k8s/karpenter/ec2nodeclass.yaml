@@ -1,0 +1,29 @@
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: default
+spec:
+  amiSelectorTerms:
+    - alias: al2023@latest
+  role: "shop-prod-eks-nodes-role"
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "ecommerce-prod"
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "ecommerce-prod"
+  metadataOptions:
+    httpTokens: required
+    httpEndpoint: enabled
+    httpPutResponseHopLimit: 2
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 20Gi
+        volumeType: gp3
+        encrypted: true
+        deleteOnTermination: true
+  tags:
+    Environment: prod
+    ManagedBy: karpenter
+    Project: ecommerce-microservices

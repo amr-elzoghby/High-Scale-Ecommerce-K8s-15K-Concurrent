@@ -48,7 +48,8 @@ resource "aws_security_group" "app" {
   }
 
   tags = {
-    Name = "${var.name_prefix}-app-sg"
+    Name                            = "${var.name_prefix}-app-sg"
+    "karpenter.sh/discovery"        = var.cluster_name
   }
 }
 

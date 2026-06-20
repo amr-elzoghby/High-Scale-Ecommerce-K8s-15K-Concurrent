@@ -73,6 +73,12 @@ variable "any_port" {
   default     = 0
 }
 
+variable "cluster_name" {
+  description = "EKS cluster name (used for Karpenter subnet discovery tags)"
+  type        = string
+  default     = ""
+}
+
 variable "subnets" {
   description = "Subnets CIDR map"
   type = object({

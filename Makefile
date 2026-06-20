@@ -56,6 +56,8 @@ deploy: ## Deploy Databases, Microservices, and Ingress to Kubernetes
 	kubectl apply -f web-app/k8s/network-policies/
 	@echo "$(YELLOW)Deploying TLS Certificate Issuers...$(NC)"
 	kubectl apply -f web-app/k8s/cert-manager/
+	@echo "$(YELLOW)Deploying Karpenter NodePool & EC2NodeClass...$(NC)"
+	kubectl apply -f web-app/k8s/karpenter/
 	@echo "$(YELLOW)Deploying Monitoring Stack...$(NC)"
 	kubectl apply -f web-app/k8s/monitoring/
 	@echo "$(GREEN)Application deployment complete!$(NC)"
@@ -92,6 +94,7 @@ down: ## Destroy AWS Deployment
 	kubectl delete -f web-app/k8s/ingress/ --ignore-not-found
 	kubectl delete -f web-app/k8s/apps/ --ignore-not-found
 	kubectl delete -f web-app/k8s/databases/ --ignore-not-found
+	kubectl delete -f web-app/k8s/karpenter/ --ignore-not-found
 	@echo "$(YELLOW)Proceeding to destroy AWS infrastructure...$(NC)"
 	$(MAKE) infra-down
 	@echo "$(GREEN)All AWS resources destroyed. No charges will be incurred.$(NC)"

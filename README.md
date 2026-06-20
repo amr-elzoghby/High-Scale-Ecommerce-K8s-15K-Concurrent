@@ -11,7 +11,7 @@
 [![AWS EKS](https://img.shields.io/badge/AWS-EKS-FF9900?logo=amazonaws&logoColor=white)](https://aws.amazon.com/eks/)
 
 Production-grade e-commerce platform running **5 polyglot microservices** (Node.js + Python FastAPI) with a **static frontend**, deployed on **AWS EKS**.<br/>
-Engineered to handle **15,000+ concurrent users** via HPA + Cluster Autoscaler.
+Engineered to handle **15,000+ concurrent users** via HPA + Karpenter.
 
 [Quick Start](#-quick-start) · [Architecture](#-architecture) · [Deploy to AWS](#-deploy-to-aws-eks) · [Teardown](#-teardown)
 
@@ -208,7 +208,7 @@ make local-up  # Local k3d cluster (no AWS charges)
 | **Ingress** | Nginx | Application LB |
 | **IaC** | Terraform 1.5+ | S3 + DynamoDB Lock |
 | **CI/CD** | GitHub Actions + OIDC | ECR |
-| **Scaling** | HPA + Cluster Autoscaler | EC2 Spot + On-Demand |
+| **Scaling** | HPA + Karpenter | EC2 Spot + On-Demand |
 | **Monitoring** | Prometheus + Grafana | EBS (50 GB) |
 | **Logging** | Loki + Promtail | EBS (20 GB) |
 | **Secrets** | K8s Secrets + AWS Secrets Manager | IRSA |
@@ -236,8 +236,8 @@ kubectl port-forward svc/grafana 3000:3000 -n monitoring
 ## ⚙️ Auto-Scaling & Resilience
 
 ```
-Traffic Spike → CPU > 60–80% → HPA scales pods (2 → 20) → Cluster Autoscaler adds Spot nodes → Traffic served ✅
-Traffic Drop  → HPA reduces replicas → Autoscaler removes idle nodes → Cost drops automatically
+Traffic Spike → CPU > 60–80% → HPA scales pods (2 → 20) → Karpenter provisions Spot nodes (~30s) → Traffic served ✅
+Traffic Drop  → HPA reduces replicas → Karpenter consolidates idle nodes → Cost drops automatically
 ```
 
 ### Self-Healing
@@ -302,10 +302,15 @@ Traffic Drop  → HPA reduces replicas → Autoscaler removes idle nodes → Cos
     │   ├── network-policies/     # Zero-Trust rules
     │   ├── namespaces/           # Namespace definitions
     │   ├── secrets/              # Secret manifests
+    │   ├── karpenter/            # Karpenter CRDs
+    │   │   ├── nodepool.yaml     # NodePool (Spot/On-Demand configs)
+    │   │   └── ec2nodeclass.yaml # EC2 specific config (AMI, SGs)
     │   └── monitoring/           # ServiceMonitors for Prometheus
     ├── modules/
     │   ├── network/              # VPC, Subnets, SGs, VPC Endpoints
-    │   ├── eks/                  # EKS Cluster, Node Groups, Helm releases
+    │   ├── eks/                  # EKS Cluster, Helm releases
+    │   │   ├── karpenter.tf      # Karpenter IAM & Controller setup
+    │   │   └── ...
     │   ├── compute/              # Launch Template, ASG, ALB, ECR, Lambda
     │   ├── storage/              # S3 buckets
     │   ├── falco/                # Runtime security (eBPF)

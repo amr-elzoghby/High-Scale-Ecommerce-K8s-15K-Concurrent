@@ -42,8 +42,9 @@ resource "aws_subnet" "private_1" {
   availability_zone       = "${var.aws_region}a"
 
   tags = {
-    Name = "${var.name_prefix}-private-1"
-    Tier = "Private"
+    Name                            = "${var.name_prefix}-private-1"
+    Tier                            = "Private"
+    "karpenter.sh/discovery"        = var.cluster_name
   }
 }
 
@@ -54,8 +55,9 @@ resource "aws_subnet" "private_2" {
   availability_zone       = "${var.aws_region}b"
 
   tags = {
-    Name = "${var.name_prefix}-private-2"
-    Tier = "Private"
+    Name                            = "${var.name_prefix}-private-2"
+    Tier                            = "Private"
+    "karpenter.sh/discovery"        = var.cluster_name
   }
 }
 

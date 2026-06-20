@@ -57,8 +57,7 @@ resource "aws_eks_node_group" "workers" {
   }
 
   tags = {
-    "k8s.io/cluster-autoscaler/enabled"             = "true"
-    "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
+    "karpenter.sh/discovery" = var.cluster_name
   }
 
   depends_on = [
@@ -68,40 +67,6 @@ resource "aws_eks_node_group" "workers" {
   ]
 } 
 
-# ─── Spot Node Group (Application Workloads) ──────────────────────────────────────────
-resource "aws_eks_node_group" "workers_spot" {
-  cluster_name    = aws_eks_cluster.main.name
-  node_group_name = "${var.name_prefix}-workers-spot"
-  node_role_arn   = aws_iam_role.eks_nodes.arn
-  subnet_ids      = local.private_subnet_ids
-  capacity_type   = "SPOT"
-  instance_types = var.spot_instance_types
-
-  labels = {
-    role = "apps"
-  }
-
-  scaling_config {
-    desired_size = var.spot_desired_size
-    min_size     = var.spot_min_size
-    max_size     = var.spot_max_size
-  }
-
-  update_config {
-    max_unavailable = 1
-  }
-
-  tags = {
-    "k8s.io/cluster-autoscaler/enabled"             = "true"
-    "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
-  }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_worker_node_policy,
-    aws_iam_role_policy_attachment.eks_cni_policy,
-    aws_iam_role_policy_attachment.ecr_read_only,
-  ]
-}
 
 # ─── EBS CSI Driver ─────────────────────────
 module "ebs_csi_irsa_role" {
@@ -126,6 +91,5 @@ resource "aws_eks_addon" "ebs_csi_driver" {
 
   depends_on = [
     aws_eks_node_group.workers,
-    aws_eks_node_group.workers_spot,
   ]
 }

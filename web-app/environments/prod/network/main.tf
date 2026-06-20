@@ -14,10 +14,11 @@ provider "aws" {
 module "network" {
   source = "../../../modules/network"
 
-  environment = "prod"
-  name_prefix = "shop-prod"
-  vpc_cidr    = var.vpc_cidr
-  aws_region  = var.aws_region
+  environment  = "prod"
+  name_prefix  = "shop-prod"
+  vpc_cidr     = var.vpc_cidr
+  aws_region   = var.aws_region
+  cluster_name = "ecommerce-prod"
   
   subnets = {
     public_1  = "10.1.1.0/24"

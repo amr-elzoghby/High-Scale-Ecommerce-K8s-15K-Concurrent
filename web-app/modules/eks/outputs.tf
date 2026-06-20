@@ -22,3 +22,13 @@ output "node_group_role_arn" {
   description = "IAM role ARN of the worker nodes"
   value       = aws_iam_role.eks_nodes.arn
 }
+
+output "karpenter_irsa_role_arn" {
+  description = "IRSA role ARN for the Karpenter controller"
+  value       = module.karpenter.iam_role_arn
+}
+
+output "karpenter_queue_name" {
+  description = "SQS queue name for Karpenter Spot interruption handling"
+  value       = module.karpenter.queue_name
+}
